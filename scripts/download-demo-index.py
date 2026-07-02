@@ -53,7 +53,9 @@ def _detect_repo() -> str:
 
 def _download(url: str, dest: Path) -> None:
     print(f"⬇️  下载: {url}")
-    req = urllib.request.Request(url, headers={"User-Agent": "campus-qa-demo-index/1.0"})
+    req = urllib.request.Request(
+        url, headers={"User-Agent": "campus-qa-demo-index/1.0"}
+    )
     with urllib.request.urlopen(req, timeout=120) as resp, open(dest, "wb") as f:
         shutil.copyfileobj(resp, f)
 
@@ -132,7 +134,11 @@ def main() -> int:
     INDEX_DIR.mkdir(parents=True, exist_ok=True)
 
     with tarfile.open(tmp_file, "r:gz") as tar:
-        tar.extractall(path=INDEX_DIR.parent)
+        # Python 3.12+ 要求显式 filter 以避免 DeprecationWarning
+        if hasattr(tarfile, "data_filter"):
+            tar.extractall(path=INDEX_DIR.parent, filter="data")
+        else:
+            tar.extractall(path=INDEX_DIR.parent)
 
     tmp_file.unlink(missing_ok=True)
 
