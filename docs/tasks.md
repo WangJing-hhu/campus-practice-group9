@@ -1,14 +1,14 @@
-# Implementation Plan
+# 实施计划
 
-- [x] 1. Define requirements and architecture
-  - _Requirements: 1-5_
-- [x] 2. Implement database, authentication, and authorization
-  - _Requirements: 1, 4, 5_
-- [x] 3. Implement document ingestion and local retrieval
-  - _Requirements: 2, 4_
-- [x] 4. Implement cited chat and history APIs
-  - _Requirements: 2, 3_
-- [x] 5. Implement responsive React application
-  - _Requirements: 1-5_
-- [x] 6. Add samples, documentation, and automated verification
-  - _Requirements: 1-5_
+- [x] 1. 定义需求与架构
+  - _需求覆盖：1-5_
+- [x] 2. 实现数据库、认证与授权
+  - _需求覆盖：1、4、5_
+- [x] 3. 实现文档入库与本地检索
+  - _需求覆盖：2、4_
+- [x] 4. 实现带引用来源的问答与历史记录接口
+  - _需求覆盖：2、3_
+- [x] 5. 实现响应式 React 应用
+  - _需求覆盖：1-5_
+- [x] 6. 添加示例、文档与自动化验证
+  - _需求覆盖：1-5_

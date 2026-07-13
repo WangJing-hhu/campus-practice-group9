@@ -1,38 +1,31 @@
-# Campus QA Requirements
+# 校园问答助手需求文档
 
-## Scope
+## 项目范围
 
-Build a teaching-ready, locally run campus knowledge assistant with authentication,
-document management, DashScope-backed RAG, cited answers, and conversation history.
+构建一个可用于教学、可在本地运行的校园知识库问答系统，支持用户认证、
+文档管理、基于 DashScope 的 RAG 检索、带引用来源的答案生成以及会话历史记录。
 
-## User Stories
+## 用户故事
 
-1. As a student, I can register and sign in so my conversations are private.
-2. As a student, I can ask campus questions and see the supporting sources.
-3. As a student, I can review and delete my previous conversations.
-4. As an administrator, I can upload and manage knowledge-base documents.
-5. As an administrator, I can manage user status and roles.
+1. 作为学生，我可以注册并登录，使我的问答会话保持私密。
+2. 作为学生，我可以提出校园相关问题，并查看答案的支撑来源。
+3. 作为学生，我可以查看并删除以往的会话记录。
+4. 作为管理员，我可以上传并管理知识库文档。
+5. 作为管理员，我可以管理用户状态与角色。
 
-## Acceptance Criteria
+## 验收标准
 
-- When a visitor submits valid registration data, the system shall create an
-  active student account and return an authenticated session.
-- When a user submits a question, the system shall retrieve relevant chunks,
-  produce an answer, persist the exchange, and return cited sources.
-- The local demo shall require a valid DashScope API key for embedding and answer
-  generation.
-- When an administrator uploads TXT, Markdown, PDF, or DOCX content, the system
-  shall extract text, split it into chunks, and make it searchable.
-- When a non-administrator calls an administrator endpoint, the system shall
-  return HTTP 403.
-- When an administrator disables a user, that user shall no longer be able to
-  authenticate or use protected endpoints.
-- While using a mobile viewport, the system shall preserve all primary chat,
-  history, and document-management workflows.
+- 访客提交有效的注册信息后，系统应创建一名状态为正常的学生账号，并返回已认证的会话。
+- 用户提交问题后，系统应检索相关文本片段、生成答案、保存问答记录，并返回带引用的来源。
+- 本地演示版本应使用有效的 DashScope API Key 进行 Embedding 与答案生成。
+- 管理员上传 TXT、Markdown、PDF 或 DOCX 文件后，系统应提取文本、切分为片段并使其可被检索。
+- 非管理员调用管理员接口时，系统应返回 HTTP 403。
+- 管理员停用某用户后，该用户应无法再认证或使用受保护接口。
+- 在移动设备视口下，系统应保留主要的聊天、历史记录与文档管理工作流。
 
-## Non-goals
+## 非目标
 
-- Production-scale vector infrastructure.
-- Multi-tenant organization isolation.
-- OCR for scanned documents.
-- Public deployment or production secret management.
+- 生产级规模的向量基础设施。
+- 多租户组织隔离。
+- 扫描版文档的 OCR 识别。
+- 公网部署或生产环境密钥管理。

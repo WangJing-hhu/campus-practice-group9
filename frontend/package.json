@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:widget": "vite build --config vite.widget.config.ts && cp dist/widget.umd.cjs dist/widget.js",
+    "build:widget": "vite build --config vite.widget.config.ts && cp dist/widget.umd.cjs dist/widget.js && cp dist/widget.js ../site-snapshot/widget.js",
     "lint": "oxlint",
     "preview": "vite preview"
   },
