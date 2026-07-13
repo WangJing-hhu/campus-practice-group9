@@ -40,8 +40,10 @@ from .rag import extract_text
 class OpenAICompatibleLLM(OpenAI):
     """OpenAI 兼容接口的 LLM 封装。
 
-    绕过 llama_index 对模型名的校验，让 qwen-turbo 等自定义模型
-    也能通过 OpenAI 兼容端点调用。
+    设计动机：llama_index 的 OpenAI 客户端对 model 字段有白名单校验，
+    直接传 `qwen-turbo` 会被拒绝。继承并重写 `_get_model_name` 返回一个
+    通过校验的占位名（如 gpt-3.5-turbo），真实模型名由基类的 model
+    参数透传给 OpenAI 兼容端点（DashScope 的 /compatible-mode/v1）。
     """
 
     def _get_model_name(self) -> str:
@@ -55,21 +57,37 @@ HHU_SYSTEM_PROMPT = """你是河海大学校园问答助手，专门回答关于
 1. 只根据提供的参考资料回答，资料不足时明确说明"根据现有资料，暂未找到相关信息"
 2. 使用简洁、专业的中文回答
 3. 在回答中引用资料来源，使用 [1]、[2] 等标注
-4. 回答末尾可附上"如需了解更多，请访问河海大学官网：www.hhu.edu.cn"
+4. 回答末尾可附上"如需了解更多，可访问河海大学官网：www.hhu.edu.cn"
 5. 对于招生、录取等时效性问题，建议用户核实最新信息"""
 
 
 class HHURAGEngine:
-    """基于 LlamaIndex 的 RAG 引擎，使用 OpenAI 兼容接口对接百炼/DashScope。"""
+    """基于 LlamaIndex 的 RAG 引擎，使用 OpenAI 兼容接口对接百炼/DashScope。
+
+    单例模式（通过 `__new__` + `_initialized` 标志）—— 整个进程共用一份
+    FAISS 索引、docstore、_index_lock，否则多个实例会导致状态不一致。
+    """
 
     _instance: HHURAGEngine | None = None
 
-    def __new__(cls) -> HHURAGEngine:
+    def __new__(cls) -> "HHURAGEngine":
+        """单例入口：第一次调用时创建实例，之后都返回同一个。
+
+        为什么单例：
+        - FAISS 索引 + docstore + 嵌入模型都是重量级对象
+        - 多个实例意味着多份索引，状态会发散
+        - _index_lock 只能在单个引擎内部生效
+        """
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self) -> None:
+        """初始化引擎：配置 Settings、建索引锁、加载或重建 FAISS。
+
+        注意：被 `__new__` 保护，重复调用不会重新初始化。
+        启动顺序很重要：先 Settings（要拿到 API key），再 lock，最后建索引。
+        """
         if getattr(self, "_initialized", False):
             return
         self._initialized = True
@@ -87,6 +105,16 @@ class HHURAGEngine:
     # 配置
     # ------------------------------------------------------------------
     def _configure_settings(self) -> None:
+        """配置 LlamaIndex 全局 Settings（嵌入模型、LLM、切分器、上下文窗口）。
+
+        关键设计：
+        - 缺 DASHSCOPE_API_KEY 立刻抛 RuntimeError，避免运行时才暴露问题
+        - 用 OpenAI 兼容接口（base_url 指向 DashScope）绕过域名限制
+        - OpenAIEmbedding 的 model 字段是给 LlamaIndex 枚举校验用的"假名"，
+          真实模型名通过 model_name=settings.embedding_model 传过去
+        - temperature=0.1 偏向确定性回答（教学/校园场景忌讳"自由发挥"）
+        - max_tokens=1024 限制单次回答长度，避免一次吐太多
+        """
         if not settings.dashscope_api_key:
             raise RuntimeError(
                 "DASHSCOPE_API_KEY 未配置；本项目需要联网使用 DashScope Embedding 与 LLM"
@@ -117,6 +145,11 @@ class HHURAGEngine:
         Settings.context_window = 8192
 
     def _build_ingestion_pipeline(self) -> IngestionPipeline:
+        """构造 IngestionPipeline：先切块（SentenceSplitter），再嵌入。
+
+        实际走的是 `index.insert()` 隐式调用同样的 transformations，
+        这个 pipeline 字段保留主要是为了未来扩展（添加清洗步骤 / 摘要步骤）。
+        """
         return IngestionPipeline(
             transformations=[
                 SentenceSplitter(
@@ -132,10 +165,28 @@ class HHURAGEngine:
     # 索引加载 / 构建
     # ------------------------------------------------------------------
     def _create_faiss_index(self, dimension: int) -> faiss.Index:
+        """创建裸的 FAISS 索引对象。
+
+        用 `IndexFlatIP`（精确内积）而非 IVF/HNSW 的取舍：
+        - demo KB 仅 ~2 篇文档，全量 1097 篇，精确检索够用
+        - 复杂度 O(n)，n=10^5 仍可秒级返回
+        - 真要扩到百万级应该换 `IndexIVFFlat` 或 `IndexHNSWFlat`
+        为什么用 IP 而非 L2：text-embedding-v3 默认 L2 归一化，
+        内积 = 余弦相似度，对语义检索更合适。
+        """
         # FaissVectorStore 内部自行维护 ID 映射，传入裸 IndexFlatIP 即可
         return faiss.IndexFlatIP(dimension)
 
     def _load_or_build_index(self) -> VectorStoreIndex:
+        """加载已有索引，或从头建一个新的。
+
+        处理三种磁盘状态：
+        1. docstore + faiss + index_store 都在 → 完整加载（最常见）
+        2. 只有 docstore，向量文件缺失 → 降级用 docstore 重建（不会丢数据）
+        3. 都不在 → 新建空索引（首次启动）
+
+        加载失败时**不会**自动覆盖 docstore，避免误删历史节点。
+        """
         docstore_path = self.persist_dir / "docstore.json"
         faiss_path = self.persist_dir / "faiss.index"
         index_store_path = self.persist_dir / "index_store.json"
@@ -190,6 +241,12 @@ class HHURAGEngine:
         return index
 
     def _get_embedding_dimension(self) -> int:
+        """获取当前嵌入模型的向量维度（用于初始化 FAISS 索引）。
+
+        两条路径：
+        - text-embedding-v3 固定 1024 维（硬编码快速路径，省一次 API 调用）
+        - 其他模型 → 调一次真实 API 探测（贵但准确，作为兜底）
+        """
         # text-embedding-v3 固定 1024 维
         if settings.embedding_model == "text-embedding-v3":
             return 1024
@@ -198,6 +255,15 @@ class HHURAGEngine:
         return len(embedding)
 
     def _persist(self, index: VectorStoreIndex | None = None) -> None:
+        """把当前索引的 3 部分分别落盘到 `data/llama_index_storage/`。
+
+        三件套：
+        - `docstore.json`     ：所有 TextNode（原文 + metadata + 关系边）
+        - `index_store.json`  ：index_id → IndexStruct 映射
+        - `faiss.index`       ：二进制向量（仅有 ID + 数值）
+
+        必须加锁：FAISS 写入不是线程安全的；不加锁并发写会破坏向量布局。
+        """
         with self._index_lock:
             target = index or self.index
             self.persist_dir.mkdir(parents=True, exist_ok=True)
@@ -221,6 +287,13 @@ class HHURAGEngine:
     # 文档管理
     # ------------------------------------------------------------------
     def _is_retryable_network_error(self, exc: Exception) -> bool:
+        """判断一个异常是否值得重试（仅限网络类瞬时错误）。
+
+        只重试：ConnectionReset / Timeout / Connection aborted
+        不重试：参数错、API key 错、长度超限等永久性错误
+
+        区分原则：网络错误恢复后可继续；业务错误重试 100 次也是同样的错。
+        """
         name = type(exc).__name__.lower()
         msg = str(exc).lower()
         return (
@@ -232,7 +305,14 @@ class HHURAGEngine:
         )
 
     def _insert_with_retry(self, doc: Document, max_retries: int = 3) -> None:
-        """调用 index.insert 并针对网络类错误重试。"""
+        """把一个 Document 插入索引，并对网络错误自动重试。
+
+        退避策略：`2^attempt + random()` 秒（指数退避 + 抖动，避免雪崩）。
+        - 业务错误（参数错、API key 错）立即抛出
+        - 调用方负责捕获后写 `status='ERROR'` 到数据库
+
+        加锁：FAISS insert 内部会同时操作 docstore 和 faiss，必须互斥。
+        """
         for attempt in range(max_retries):
             try:
                 with self._index_lock:
@@ -259,7 +339,19 @@ class HHURAGEngine:
         source_url: str = "",
         db: sqlite3.Connection | None = None,
     ) -> int:
-        """为单个文档建立/更新索引，返回 chunk 数量。"""
+        """为单个文档建立/更新索引，返回实际生成的 chunk（节点）数量。
+
+        完整流程：
+        1. `_build_document` 解析文件为 LlamaIndex Document（清洗/分块准备）
+        2. 空内容（纯导航）直接返回 0
+        3. `delete_document(persist=False)` 先删同名旧节点（实现幂等）
+        4. `_insert_with_retry` 走分块 + 嵌入 + 插入
+        5. `_persist` 落盘
+        6. `_count_nodes_by_document_id` 统计实际节点数
+        7. 传了 db 就回写 `chunk_count` + `status='READY'` 到 SQLite
+
+        返回值 0 表示文档清洗后无内容（被忽略，不报错）。
+        """
         file_path = Path(file_path)
         document = self._build_document(
             file_path=file_path,
@@ -299,6 +391,16 @@ class HHURAGEngine:
         category: str,
         source_url: str,
     ) -> Document:
+        """根据文件后缀构造 LlamaIndex `Document` 对象。
+
+        分支：
+        - `.md` → `HHUMarkdownReader`（清洗导航词 + 解析 YAML frontmatter）
+        - 其它后缀 → `extract_text`（pypdf / python-docx / utf-8 字节流）
+
+        无论走哪条路，最后都注入 6 个核心 metadata：
+        `document_id` / `stored_name` / `title` / `category` / `source_url` / `file_path`
+        这些 metadata 会一路继承到 chunk，被检索结果 `_format_sources` 用到。
+        """
         suffix = file_path.suffix.lower()
         if suffix in {".md"}:
             # Markdown 使用 HHUMarkdownReader 清洗
@@ -331,6 +433,13 @@ class HHURAGEngine:
         )
 
     def _count_nodes_by_document_id(self, document_id: int) -> int:
+        """统计属于某个文档 ID 的 TextNode 数量。
+
+        用 docstore 而非 SQL `chunks` 表统计：
+        - 向量的真源是 docstore + FAISS，不是 chunks 表
+        - chunks.vector 列在 LlamaIndex 路径下永远是 NULL（见 database.py 迁移说明）
+        加锁：避免在遍历过程中 docstore 被其他线程修改。
+        """
         target = str(document_id)
         with self._index_lock:
             return sum(
@@ -342,7 +451,16 @@ class HHURAGEngine:
     def _build_index_from_docstore(
         self, docstore: Any | None = None
     ) -> VectorStoreIndex:
-        """根据 docstore 中的节点重建 FAISS 索引，返回新索引。"""
+        """用 docstore 中的节点重建一个全新的 FAISS 索引，返回新索引。
+
+        关键设计：
+        - 新建 `SimpleIndexStore`（**不能**复用旧的，否则会累积旧 IndexStruct）
+        - 把所有 nodes 一次性传进去 → LlamaIndex 会重新嵌入所有节点
+        - 用 `store_nodes_override=True` 强制覆盖
+
+        性能：节点越多越慢。100 节点约 1s，1000 节点约 10s（取决于 embedding API 延迟）。
+        这是 `delete_document` 和 `rebuild_index` 都依赖的底层操作。
+        """
         from llama_index.core.storage.index_store import SimpleIndexStore
 
         target_docstore = docstore or self.index.docstore
@@ -363,11 +481,29 @@ class HHURAGEngine:
         )
 
     def _rebuild_index_from_docstore(self) -> None:
-        """根据当前 docstore 中的节点重建 FAISS 索引。"""
+        """根据当前 docstore 重建索引（覆盖 self.index）。
+
+        是 `_build_index_from_docstore` 的便捷包装，不传 docstore 就用 self.index.docstore。
+        """
         self.index = self._build_index_from_docstore()
 
     def delete_document(self, document_id: int, persist: bool = True) -> bool:
-        """删除与 document_id 关联的所有节点（FaissVectorStore 不支持单点删除，故重建索引）。"""
+        """删除与 document_id 关联的所有节点，返回是否真有节点被删。
+
+        ⚠️ **FAISS IndexFlatIP 不支持单点删除**！这是本函数最大的特殊性。
+
+        实现方式（看似朴素实则被迫）：
+        1. 在 docstore 里找出所有 document_id 匹配的 node_id
+        2. 从 docstore 中删除这些 node
+        3. 调 `_rebuild_index_from_docstore` 用剩余节点重建 FAISS
+        4. （可选）`_persist` 落盘
+
+        在小 KB（< 1000 chunk）上代价可接受，每删一个文档就要重新嵌入所有剩余 chunk。
+        替代方案（生产推荐）：
+        - `IndexHNSWFlat` 支持 `remove_ids`
+        - Milvus / Qdrant / Weaviate 等专用向量库
+        - 软删除（标记 is_deleted，过滤时跳过）
+        """
         with self._index_lock:
             target = str(document_id)
             node_ids = [
@@ -393,7 +529,16 @@ class HHURAGEngine:
         source_url: str = "",
         db: sqlite3.Connection | None = None,
     ) -> int:
-        """重新处理文档：先删除旧节点，再重新插入。"""
+        """重新处理文档：保留 document_id，重新走 add_document 流程。
+
+        用于：
+        - 嵌入模型升级（如 v3 → v4）后想用新模型重新嵌入
+        - chunk_size / overlap 调整后想用新参数重切
+        - 人工修正了源文件后想刷新索引
+
+        和"删除再上传"的区别：**document_id 不变** → 引用这个文档的会话历史不会断。
+        `persist=False` 在内部 delete_document，避免双重持久化开销。
+        """
         self.delete_document(document_id, persist=False)
         return self.add_document(
             file_path=file_path,
@@ -405,7 +550,16 @@ class HHURAGEngine:
         )
 
     def rebuild_index(self) -> None:
-        """全量重建索引：清空后重新加载所有 READY 文档。"""
+        """全量重建索引：清空 FAISS，从 SQLite 重新加载所有 READY 文档。
+
+        适用场景：
+        - FAISS 文件损坏 / 与 docstore 不一致
+        - 切换嵌入模型后
+        - 大规模清洗数据后想重置
+
+        注意：每个文档都会**重新调 embedding API**（1097 篇就会烧掉一批 token）。
+        ERROR 状态的文档会被跳过（status != 'READY'）。
+        """
         with self._index_lock:
             dimension = self._get_embedding_dimension()
             faiss_index = self._create_faiss_index(dimension)
@@ -439,7 +593,19 @@ class HHURAGEngine:
     def load_knowledge_base(
         self, directory: Path | str | None = None, uploaded_by: int = 1
     ) -> int:
-        """加载河海知识库目录到索引，返回新增/更新文档数。"""
+        """从 knowledge-base 目录灌库（CLI 路径），返回成功新增的文档数。
+
+        流程：
+        1. `HHUMarkdownReader` 读所有 `.md`
+        2. 扫描 docstore 收集已索引的文件名（去重）
+        3. 批大小 20，每批 commit 一次（防崩溃丢太多）
+        4. 网络错误自动重试，业务错误 `print` 后跳过
+        5. 同时写 SQLite `documents` 表（status='READY'）
+
+        与 `add_document` 的区别：
+        - `load_knowledge_base` 走文件目录，CLI 触发，乐观事务
+        - `add_document` 走单文件 API，HTTP 触发，悲观事务
+        """
         directory = Path(directory or settings.knowledge_base_dir)
         if not directory.exists():
             print(f"⚠️ 知识库目录不存在: {directory}")
@@ -543,6 +709,14 @@ class HHURAGEngine:
     # 检索与生成
     # ------------------------------------------------------------------
     def _format_sources(self, source_nodes: list[Any]) -> list[dict[str, Any]]:
+        """把 FAISS 返回的 `NodeWithScore` 列表格式化成前端友好的 sources 数组。
+
+        关键点：
+        - `i` 从 1 开始编号 → 前端 `[1] [2] [3]` 标注的依据
+        - `MetadataMode.NONE` 让 content 字段不包含 metadata 块，省 token
+        - `score` 四舍五入到 4 位小数（前端展示更友好）
+        - 缺字段时填默认值（title→"未知来源"），保证前端不会 undefined
+        """
         sources = []
         for i, node in enumerate(source_nodes, start=1):
             metadata = node.metadata or {}
@@ -563,7 +737,11 @@ class HHURAGEngine:
     def query(
         self, question: str, conversation_id: int | None = None
     ) -> dict[str, Any]:
-        """单次非流式查询。"""
+        """单次非流式查询，返回 `{answer, sources}` 字典。
+
+        与 `stream_query` 的区别：等模型生成完**一次性**返回。
+        用于：测试、脚本、admin 后台批量调。不用于聊天 UI。
+        """
         with self._index_lock:
             chat_history = self._load_chat_history(conversation_id)
             retriever = self.index.as_retriever(similarity_top_k=settings.top_k)
@@ -583,7 +761,18 @@ class HHURAGEngine:
         conversation_id: int | None = None,
         top_k: int | None = None,
     ) -> Iterator[str]:
-        """流式查询（SSE 格式）。"""
+        """流式查询，yield SSE 格式的字符串（前端 `getReader()` 逐帧消费）。
+
+        协议：
+        - 第一帧 `event: meta`   data: `{sources: [...]}`（先于内容，给前端先渲染引用卡）
+        - 后续 N 帧 `event: token` data: `{text: "..."}`（一个 token 一帧）
+        - 最后 `event: done`       data: `{}`（前端据此停止解析）
+
+        实现要点：
+        - token 可能是 `StreamingResponseChatMessage.delta`（新版本）或纯字符串（老版本），
+          兼容两种用 `hasattr(token, "delta")` 判断
+        - `event: done` 是在 lock 外 yield 的（lock 只保护索引访问，不保护 yield）
+        """
         with self._index_lock:
             chat_history = self._load_chat_history(conversation_id)
             retriever = self.index.as_retriever(
@@ -608,6 +797,14 @@ class HHURAGEngine:
         yield "event: done\ndata: {}\n\n"
 
     def _load_chat_history(self, conversation_id: int | None) -> list[ChatMessage]:
+        """从 SQLite `messages` 表加载历史消息，重建为 LlamaIndex `ChatMessage` 列表。
+
+        每次请求都**全量读**这个会话的所有消息，没做增量。
+        - 优点：万一中间有消息被编辑/删除，下一轮自动反映
+        - 缺点：长对话（>100 轮）时 token 容易爆
+
+        进阶方案：只读最近 N 轮 + 早轮做 summary（但本项目为简单起见不做）。
+        """
         if not conversation_id:
             return []
         with connect() as db:
@@ -626,5 +823,5 @@ class HHURAGEngine:
         ]
 
 
-# 全局 RAG 引擎实例
+# 全局 RAG 引擎实例（启动时自动初始化，进程内单例）
 rag_engine = HHURAGEngine()

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "./context/auth-context";
 import { ChatPage } from "./pages/ChatPage";
 import { KnowledgePage } from "./pages/KnowledgePage";
@@ -18,11 +18,31 @@ import {
 type Page = "chat" | "knowledge" | "users";
 
 function useAdminRoute() {
-  const hash = window.location.hash;
-  return (
-    hash.startsWith("#/admin") ||
-    window.location.pathname.replace(/\/$/, "").endsWith("/admin")
+  const [isAdmin, setIsAdmin] = useState(
+    () =>
+      window.location.hash.startsWith("#/admin") ||
+      window.location.pathname
+        .replace(/\/$/, "")
+        .endsWith("/admin")
   );
+
+  useEffect(() => {
+    const check = () =>
+      setIsAdmin(
+        window.location.hash.startsWith("#/admin") ||
+          window.location.pathname
+            .replace(/\/$/, "")
+            .endsWith("/admin")
+      );
+    window.addEventListener("hashchange", check);
+    window.addEventListener("popstate", check);
+    return () => {
+      window.removeEventListener("hashchange", check);
+      window.removeEventListener("popstate", check);
+    };
+  }, []);
+
+  return isAdmin;
 }
 
 export default function App() {
