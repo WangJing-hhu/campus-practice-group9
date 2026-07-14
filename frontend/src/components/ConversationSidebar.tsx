@@ -37,7 +37,9 @@ export function ConversationSidebar({
             }`}
           >
             <MessageSquare size={12} />
-            <span className="flex-1 truncate">{conv.title}</span>
+            <span className="flex-1 truncate" title={conv.title}>
+              {conv.title}
+            </span>
           </div>
         ))}
       </div>

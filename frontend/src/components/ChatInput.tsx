@@ -38,7 +38,7 @@ export function ChatInput({ onSend, loading }: Props) {
         <button
           onClick={handleSubmit}
           disabled={loading || !input.trim()}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#005BAC] text-white transition-colors hover:bg-[#004a8d] disabled:bg-gray-300"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#005BAC] text-white transition-colors hover:bg-[#004a8d] disabled:bg-gray-400 disabled:text-white/90"
         >
           <Send size={14} />
         </button>

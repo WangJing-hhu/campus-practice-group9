@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-:root {
+:root,
+:host {
   --river: #005bac;
   --river-deep: #073b66;
   --river-ink: #102d44;
@@ -1036,9 +1037,9 @@ a {
   position: relative;
   display: grid;
   place-items: center;
-  color: var(--river);
+  color: #005bac;
   background: white;
-  border: 2px solid var(--river);
+  border: 2px solid #005bac;
   border-radius: 50%;
   box-shadow:
     0 10px 28px rgba(7, 59, 102, 0.28),
@@ -1074,8 +1075,8 @@ a {
 }
 .widget-trigger.open {
   color: white;
-  background: var(--river);
-  border-color: var(--river);
+  background: #005bac;
+  border-color: #005bac;
   animation: none;
 }
 .widget-trigger svg {
@@ -1129,15 +1130,15 @@ a {
   align-items: center;
   gap: 11px;
   padding: 11px 13px;
-  color: white;
-  background: var(--river-deep);
+  color: #ffffff !important;
+  background: #073b66 !important;
 }
 .widget-brand-icon {
   width: 34px;
   height: 34px;
   display: grid;
   place-items: center;
-  color: var(--river-deep);
+  color: #073b66;
   background: white;
   border-radius: 50%;
 }
@@ -1156,37 +1157,56 @@ a {
 }
 .widget-header > button {
   margin-left: auto;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
-  color: rgba(255, 255, 255, 0.7);
-  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  transition: 0.2s;
+}
+.widget-header > button:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.22);
 }
 .widget-history {
-  width: 118px;
-  flex: 0 0 118px;
+  width: 170px;
+  flex: 0 0 170px;
   display: flex;
   flex-direction: column;
   background: #efede6;
-  border-right: 1px solid var(--line);
+  border-right: 1px solid #d9d7d0;
 }
 .widget-history-head {
   padding: 10px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid #d9d7d0;
+  background: #efede6;
 }
 .widget-new-chat {
   width: 100%;
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 5px;
-  padding: 7px 5px;
-  color: white;
-  background: var(--river);
-  font-size: 10px;
+  padding: 8px 6px;
+  color: #ffffff !important;
+  background: #005bac !important;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 4px;
+}
+.widget-new-chat svg {
+  color: #ffffff !important;
 }
 .widget-history-list {
   flex: 1;
   overflow-y: auto;
   padding: 7px;
+}
+.widget-history-list > div {
+  padding: 7px 6px;
+  font-size: 11px;
 }
 
 @media (max-width: 900px) {
