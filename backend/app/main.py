@@ -14,7 +14,15 @@ from pydantic import BaseModel, EmailStr, Field
 
 from .config import settings
 from .database import get_db, init_database, transaction, utc_now
-from .rag_engine_v2 import HHURAGEngine, rag_engine
+rag_engine = None  # type: ignore
+HHURAGEngine = None  # type: ignore
+try:
+    from .rag_engine_v2 import HHURAGEngine as _HHURAGEngine, rag_engine as _rag_engine
+    HHURAGEngine = _HHURAGEngine
+    rag_engine = _rag_engine
+except Exception as e:
+    print(f"[WARNING] RAG engine import failed (API key may be missing): {e}")
+    print("[WARNING] Server will start but RAG/AI features will be unavailable")
 from .security import create_token, decode_token, hash_password, verify_password
 
 
@@ -161,23 +169,26 @@ async def lifespan(_: FastAPI):
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     init_database()
     # 先初始化 RAG 引擎（加载/创建 FAISS 索引），再用它索引 seed 数据
-    try:
-        _ = HHURAGEngine()
-        print("✅ DashScope + FAISS RAG engine initialized")
-    except Exception as e:
-        print(f"⚠️ RAG engine initialization failed: {e}")
-        raise
-    seed_database()
-
-    # 在后台线程加载河海知识库，避免阻塞服务启动
-    def _load_kb() -> None:
+    if HHURAGEngine is not None and rag_engine is not None:
         try:
-            loaded = rag_engine.load_knowledge_base(settings.knowledge_base_dir)
-            print(f"✅ 知识库加载完成: {loaded} 篇文档")
-        except Exception as e:
-            print(f"⚠️ 知识库加载失败: {e}")
+            _ = HHURAGEngine()
+            print("[OK] DashScope + FAISS RAG engine initialized")
+            seed_database()
 
-    threading.Thread(target=_load_kb, daemon=True).start()
+            # 在后台线程加载河海知识库，避免阻塞服务启动
+            def _load_kb() -> None:
+                try:
+                    loaded = rag_engine.load_knowledge_base(settings.knowledge_base_dir)
+                    print(f"[OK] knowledge base loaded: {loaded} documents")
+                except Exception as e:
+                    print(f"[WARNING] knowledge base load failed: {e}")
+
+            threading.Thread(target=_load_kb, daemon=True).start()
+        except Exception as e:
+            print(f"[WARNING] RAG engine initialization failed: {e}")
+            print("[WARNING] Server will start but RAG features will be unavailable")
+    else:
+        print("[WARNING] RAG engine not available, skipping initialization")
     yield
 
 
