@@ -2,21 +2,21 @@ package com.group9.campusqa.controller;
 
 import com.group9.campusqa.common.Result;
 import com.group9.campusqa.entity.User;
-import com.group9.campusqa.service.SysUserService;
+import com.group9.campusqa.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/user")
-public class SysUserController {
+public class UserController {
 
 
-    private final SysUserService sysUserService;
+    private final UserService UserService;
 
 
-    public SysUserController(SysUserService sysUserService) {
-        this.sysUserService = sysUserService;
+    public UserController(UserService UserService) {
+        this.UserService = UserService;
     }
 
 
@@ -26,7 +26,7 @@ public class SysUserController {
     @GetMapping
     public Result<List<User>> list() {
 
-        List<User> users = sysUserService.list();
+        List<User> users = UserService.list();
 
         return Result.success(users);
     }
@@ -40,7 +40,7 @@ public class SysUserController {
             @PathVariable Long id
     ) {
 
-        User user = sysUserService.getById(id);
+        User user = UserService.getById(id);
 
         return Result.success(user);
     }
@@ -54,7 +54,7 @@ public class SysUserController {
             @RequestBody User user
     ) {
 
-        boolean result = sysUserService.save(user);
+        boolean result = UserService.save(user);
 
         return Result.created(result);
     }
@@ -71,7 +71,7 @@ public class SysUserController {
 
         user.setId(id);
 
-        boolean result = sysUserService.updateById(user);
+        boolean result = UserService.updateById(user);
 
         return Result.success(result);
     }
@@ -85,7 +85,7 @@ public class SysUserController {
             @PathVariable Long id
     ) {
 
-        boolean result = sysUserService.removeById(id);
+        boolean result = UserService.removeById(id);
 
         return Result.success(result);
     }
