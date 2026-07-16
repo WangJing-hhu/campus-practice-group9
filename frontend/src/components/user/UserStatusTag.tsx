@@ -1,35 +1,34 @@
-import type { UserRole, UserStatusValue } from "../../api/user";
+import { Tag } from 'antd'
+import type { UserRole, UserStatus } from '../../api/user'
+
+// ===== 用户角色 & 状态标签（基于 Ant Design Tag） =====
 
 interface RoleTagProps {
-  role: UserRole;
+  role: UserRole
 }
 
 interface StatusTagProps {
-  status: UserStatusValue;
+  status: UserStatus
 }
 
-const ROLE_LABEL: Record<UserRole, string> = {
-  admin: "管理员",
-  user: "普通用户",
-};
+const ROLE_CONFIG: Record<UserRole, { label: string; color: string }> = {
+  admin: { label: '管理员', color: 'blue' },
+  user: { label: '普通用户', color: 'default' },
+}
 
-const STATUS_LABEL: Record<UserStatusValue, string> = {
-  1: "启用",
-  0: "禁用",
-};
+const STATUS_CONFIG: Record<UserStatus, { label: string; color: string }> = {
+  1: { label: '启用', color: 'green' },
+  0: { label: '禁用', color: 'gold' },
+}
 
+/** 角色标签 */
 export function UserRoleTag({ role }: RoleTagProps) {
-  return (
-    <span className={`user-badge user-badge--role-${role}`}>
-      {ROLE_LABEL[role]}
-    </span>
-  );
+  const cfg = ROLE_CONFIG[role]
+  return <Tag color={cfg.color}>{cfg.label}</Tag>
 }
 
+/** 状态标签 */
 export function UserStatusTag({ status }: StatusTagProps) {
-  return (
-    <span className={`user-badge user-badge--status-${status}`}>
-      {STATUS_LABEL[status]}
-    </span>
-  );
+  const cfg = STATUS_CONFIG[status]
+  return <Tag color={cfg.color}>{cfg.label}</Tag>
 }

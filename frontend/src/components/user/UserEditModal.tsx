@@ -1,162 +1,201 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { X, Loader, User, Mail, Shield } from "lucide-react";
-import type { UserRecord, UserUpdatePayload } from "../../api/user";
+import { useEffect } from 'react'
+import { Modal, Form, Input, Select } from 'antd'
+import type { UserRecord, UserUpdatePayload, UserCreatePayload } from '../../api/user'
+
+// ===== 用户新增 / 编辑弹窗（共用） =====
 
 interface UserEditModalProps {
-  user: UserRecord | null;
-  open: boolean;
-  loading: boolean;
-  onSave: (id: number, payload: UserUpdatePayload) => void;
-  onClose: () => void;
+  open: boolean
+  mode: 'create' | 'edit'
+  user?: UserRecord | null
+  loading: boolean
+  onCancel: () => void
+  onCreate: (payload: UserCreatePayload) => Promise<void>
+  onUpdate: (id: number, payload: UserUpdatePayload) => Promise<void>
 }
 
 export function UserEditModal({
-  user,
   open,
+  mode,
+  user,
   loading,
-  onSave,
-  onClose,
+  onCancel,
+  onCreate,
+  onUpdate,
 }: UserEditModalProps) {
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState<string>("user");
-  const [emailError, setEmailError] = useState("");
+  const [form] = Form.useForm()
+  const isCreate = mode === 'create'
 
+  // 打开时加载表单数据
   useEffect(() => {
-    if (user && open) {
-      setEmail(user.email);
-      setRole(user.role);
-      setEmailError("");
+    if (!open) return
+    if (isCreate) {
+      form.resetFields()
+      form.setFieldsValue({ role: 'user', status: 1 })
+    } else if (user) {
+      form.setFieldsValue({
+        email: user.email,
+        role: user.role,
+      })
     }
-  }, [user, open]);
+  }, [open, mode, user, form, isCreate])
 
-  if (!open || !user) return null;
+  // 关闭后清理
+  const handleClose = () => {
+    form.resetFields()
+    onCancel()
+  }
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-
-    // validate
-    const trimmed = email.trim();
-    if (!trimmed) {
-      setEmailError("邮箱不能为空");
-      return;
+  const handleFinish = async (values: Record<string, unknown>) => {
+    if (isCreate) {
+      await onCreate({
+        username: String(values.username).trim(),
+        password: String(values.password),
+        email: String(values.email).trim(),
+        role: values.role as UserCreatePayload['role'],
+        status: values.status as UserCreatePayload['status'],
+      })
+    } else if (user) {
+      await onUpdate(user.id, {
+        email: String(values.email).trim(),
+        role: values.role as UserUpdatePayload['role'],
+      })
     }
-    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRe.test(trimmed)) {
-      setEmailError("请输入正确的邮箱格式");
-      return;
-    }
-    setEmailError("");
+  }
 
-    onSave(user.id, {
-      email: trimmed,
-      role,
-    });
-  };
-
-  const handleOverlayClick = () => {
-    if (!loading) onClose();
-  };
+  const title = isCreate ? '新增用户' : '编辑用户信息'
+  const okText = isCreate ? '创建' : '保存'
 
   return (
-    <div className="um-overlay" onClick={handleOverlayClick}>
-      <div
-        className="um-modal um-modal--form"
-        onClick={(e) => e.stopPropagation()}
+    <Modal
+      title={title}
+      open={open}
+      onCancel={handleClose}
+      onOk={() => form.submit()}
+      confirmLoading={loading}
+      destroyOnClose
+      maskClosable={!loading}
+      centered
+      okText={okText}
+      cancelText="取消"
+      width={480}
+    >
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleFinish}
+        preserve={false}
+        size="middle"
       >
-        {/* header */}
-        <div className="um-modal-header">
-          <h3>编辑用户信息</h3>
-          <button
-            className="um-modal-close"
-            onClick={onClose}
-            disabled={loading}
-            aria-label="关闭"
+        {/* 用户名 */}
+        {isCreate ? (
+          <Form.Item
+            name="username"
+            label="用户名"
+            rules={[
+              { required: true, message: '请输入用户名' },
+              { min: 2, max: 50, message: '用户名长度2—50位' },
+            ]}
           >
-            <X size={18} />
-          </button>
-        </div>
-
-        {/* body */}
-        <form onSubmit={handleSubmit} className="um-modal-body">
-          {/* username — read only */}
-          <div className="um-field">
-            <label className="um-field-label">
-              <User size={14} />
-              用户名
-            </label>
-            <input
-              className="um-input um-input--readonly"
-              type="text"
-              value={user.username}
-              readOnly
-              tabIndex={-1}
+            <Input
+              placeholder="请输入用户名"
+              disabled={loading}
+              autoComplete="off"
             />
-            <span className="um-field-hint">用户名不可修改</span>
-          </div>
+          </Form.Item>
+        ) : (
+          <Form.Item label="用户名">
+            <Input value={user?.username ?? ''} readOnly disabled />
+          </Form.Item>
+        )}
 
-          {/* email */}
-          <div className="um-field">
-            <label className="um-field-label">
-              <Mail size={14} />
-              邮箱
-            </label>
-            <input
-              className={`um-input ${emailError ? "um-input--error" : ""}`}
-              type="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (emailError) setEmailError("");
-              }}
-              placeholder="请输入邮箱地址"
+        {/* 密码（仅新增） */}
+        {isCreate && (
+          <>
+            <Form.Item
+              name="password"
+              label="密码"
+              rules={[
+                { required: true, message: '请输入密码' },
+                { min: 6, max: 72, message: '密码长度6—72位' },
+              ]}
+            >
+              <Input.Password
+                placeholder="请输入密码"
+                disabled={loading}
+                autoComplete="new-password"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="confirmPassword"
+              label="确认密码"
+              dependencies={['password']}
+              rules={[
+                { required: true, message: '请再次输入密码' },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue('password') === value) {
+                      return Promise.resolve()
+                    }
+                    return Promise.reject(new Error('两次输入的密码不一致'))
+                  },
+                }),
+              ]}
+            >
+              <Input.Password
+                placeholder="请再次输入密码"
+                disabled={loading}
+                autoComplete="new-password"
+              />
+            </Form.Item>
+          </>
+        )}
+
+        {/* 邮箱 */}
+        <Form.Item
+          name="email"
+          label="邮箱"
+          rules={[
+            { required: true, message: '邮箱不能为空' },
+            { type: 'email', message: '请输入正确的邮箱格式' },
+          ]}
+        >
+          <Input placeholder="请输入邮箱地址" disabled={loading} />
+        </Form.Item>
+
+        {/* 角色 */}
+        <Form.Item
+          name="role"
+          label="角色"
+          rules={[{ required: true, message: '请选择角色' }]}
+        >
+          <Select
+            disabled={loading}
+            options={[
+              { value: 'user', label: '普通用户' },
+              { value: 'admin', label: '管理员' },
+            ]}
+          />
+        </Form.Item>
+
+        {/* 状态（仅新增） */}
+        {isCreate && (
+          <Form.Item
+            name="status"
+            label="状态"
+            rules={[{ required: true, message: '请选择状态' }]}
+          >
+            <Select
               disabled={loading}
+              options={[
+                { value: 1, label: '启用' },
+                { value: 0, label: '禁用' },
+              ]}
             />
-            {emailError && <span className="um-field-err">{emailError}</span>}
-          </div>
-
-          {/* role */}
-          <div className="um-field">
-            <label className="um-field-label">
-              <Shield size={14} />
-              角色
-            </label>
-            <select
-              className="um-input um-select"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              disabled={loading}
-            >
-              <option value="user">普通用户</option>
-              <option value="admin">管理员</option>
-            </select>
-          </div>
-
-          {/* actions */}
-          <div className="um-form-actions">
-            <button
-              type="button"
-              className="um-btn um-btn--ghost"
-              onClick={onClose}
-              disabled={loading}
-            >
-              取消
-            </button>
-            <button
-              type="submit"
-              className="um-btn um-btn--primary"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader size={14} className="spin" /> 保存中...
-                </>
-              ) : (
-                "保存"
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
+          </Form.Item>
+        )}
+      </Form>
+    </Modal>
+  )
 }

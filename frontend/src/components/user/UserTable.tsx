@@ -1,40 +1,40 @@
-import {
-  Pencil,
-  UserCheck,
-  UserX,
-  Trash2,
-  Loader,
-} from "lucide-react";
-import type { UserRecord } from "../../api/user";
-import { UserRoleTag, UserStatusTag } from "./UserStatusTag";
+import { Table, Button, Space, Modal } from 'antd'
+import { EditOutlined, StopOutlined, CheckCircleOutlined, DeleteOutlined } from '@ant-design/icons'
+import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
+import type { UserRecord, UserStatus } from '../../api/user'
+import { UserRoleTag, UserStatusTag } from './UserStatusTag'
+import { showDeleteConfirm } from './UserDeleteConfirm'
+
+// ===== 用户表格 =====
 
 interface UserTableProps {
-  users: UserRecord[];
-  total: number;
-  page: number;
-  pageSize: number;
-  loading: boolean;
-  actionLoadingId: number | null;
-  onEdit: (user: UserRecord) => void;
-  onToggleStatus: (user: UserRecord) => void;
-  onDelete: (user: UserRecord) => void;
-  onPageChange: (page: number, pageSize: number) => void;
+  users: UserRecord[]
+  total: number
+  page: number
+  pageSize: number
+  loading: boolean
+  actionLoadingId: number | null
+  onEdit: (user: UserRecord) => void
+  onToggleStatus: (user: UserRecord) => void
+  onDelete: (user: UserRecord) => void
+  onPageChange: (page: number, pageSize: number) => void
 }
 
+/** 格式化创建时间，非法时返回 "—" */
 function formatTime(iso: string): string {
-  if (!iso) return "—";
+  if (!iso) return '—'
   try {
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return "—";
-    return d.toLocaleString("zh-CN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    const d = new Date(iso)
+    if (isNaN(d.getTime())) return '—'
+    return d.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
   } catch {
-    return "—";
+    return '—'
   }
 }
 
@@ -50,171 +50,161 @@ export function UserTable({
   onDelete,
   onPageChange,
 }: UserTableProps) {
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  // 状态启停确认
+  const handleToggleClick = (user: UserRecord) => {
+    const newStatus: UserStatus = user.status === 1 ? 0 : 1
+    const action = newStatus === 1 ? '启用' : '禁用'
+    const description =
+      newStatus === 1
+        ? `确定要启用用户「${user.username}」吗？启用后该用户将恢复系统使用权限。`
+        : `确定要禁用用户「${user.username}」吗？禁用后该用户将无法正常使用系统。`
 
-  const pageSizeOptions = [10, 20, 50];
+    Modal.confirm({
+      centered: true,
+      title: `确认${action}用户`,
+      content: description,
+      okText: `确认${action}`,
+      cancelText: '取消',
+      okButtonProps: {
+        danger: newStatus === 0,
+      },
+      onOk: () => {
+        onToggleStatus(user)
+      },
+    })
+  }
 
-  const handleStatusToggle = (user: UserRecord) => {
-    if (actionLoadingId === user.id) return;
-    onToggleStatus(user);
-  };
+  // 删除确认
+  const handleDeleteClick = (user: UserRecord) => {
+    showDeleteConfirm({
+      username: user.username,
+      onOk: () => {
+        onDelete(user)
+      },
+    })
+  }
 
-  const handleDelete = (user: UserRecord) => {
-    if (actionLoadingId === user.id) return;
-    onDelete(user);
-  };
+  const columns: ColumnsType<UserRecord> = [
+    {
+      title: '序号',
+      key: 'index',
+      width: 70,
+      render: (_: unknown, __: UserRecord, index: number) =>
+        (page - 1) * pageSize + index + 1,
+    },
+    {
+      title: '用户名',
+      dataIndex: 'username',
+      key: 'username',
+      width: 140,
+    },
+    {
+      title: '邮箱',
+      dataIndex: 'email',
+      key: 'email',
+      width: 220,
+    },
+    {
+      title: '角色',
+      dataIndex: 'role',
+      key: 'role',
+      width: 100,
+      render: (role: UserRecord['role']) => <UserRoleTag role={role} />,
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      width: 80,
+      render: (status: UserRecord['status']) => <UserStatusTag status={status} />,
+    },
+    {
+      title: '创建时间',
+      dataIndex: 'createTime',
+      key: 'createTime',
+      width: 180,
+      render: (t: string) => formatTime(t),
+    },
+    {
+      title: '操作',
+      key: 'actions',
+      width: 240,
+      render: (_: unknown, user: UserRecord) => {
+        const isBusy = actionLoadingId === user.id
+        return (
+          <Space size="small" wrap>
+            <Button
+              type="link"
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => onEdit(user)}
+              disabled={isBusy}
+            >
+              编辑
+            </Button>
+
+            {user.status === 1 ? (
+              <Button
+                type="link"
+                size="small"
+                icon={<StopOutlined />}
+                onClick={() => handleToggleClick(user)}
+                disabled={isBusy}
+              >
+                禁用
+              </Button>
+            ) : (
+              <Button
+                type="link"
+                size="small"
+                icon={<CheckCircleOutlined />}
+                onClick={() => handleToggleClick(user)}
+                disabled={isBusy}
+                style={{ color: '#52c41a' }}
+              >
+                启用
+              </Button>
+            )}
+
+            <Button
+              type="link"
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDeleteClick(user)}
+              disabled={isBusy}
+            >
+              删除
+            </Button>
+          </Space>
+        )
+      },
+    },
+  ]
+
+  const pagination: TablePaginationConfig = {
+    current: page,
+    pageSize,
+    total,
+    showTotal: (total: number) => `共 ${total} 条`,
+    showSizeChanger: true,
+    pageSizeOptions: ['10', '20', '50'],
+    onChange: (p, ps) => {
+      onPageChange(p, ps)
+    },
+  }
 
   return (
-    <div className="um-table-container">
-      {/* table */}
-      <div className="um-table-scroll">
-        <table className="um-table">
-          <thead>
-            <tr>
-              <th className="um-th--index">序号</th>
-              <th>用户名</th>
-              <th>邮箱</th>
-              <th>角色</th>
-              <th>状态</th>
-              <th>创建时间</th>
-              <th className="um-th--actions">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.length === 0 && !loading && (
-              <tr>
-                <td colSpan={7} className="um-empty">
-                  暂无用户数据
-                </td>
-              </tr>
-            )}
-            {users.length === 0 && loading && (
-              <tr>
-                <td colSpan={7} className="um-empty">
-                  <Loader size={18} className="spin" /> 加载中...
-                </td>
-              </tr>
-            )}
-            {users.map((user, idx) => {
-              const seq = (page - 1) * pageSize + idx + 1;
-              const isBusy = actionLoadingId === user.id;
-
-              return (
-                <tr key={user.id}>
-                  <td className="um-td--index">{seq}</td>
-                  <td className="um-td--name">{user.username}</td>
-                  <td>{user.email}</td>
-                  <td>
-                    <UserRoleTag role={user.role} />
-                  </td>
-                  <td>
-                    <UserStatusTag status={user.status} />
-                  </td>
-                  <td className="um-td--time">
-                    {formatTime(user.createTime)}
-                  </td>
-                  <td className="um-td--actions">
-                    <div className="um-actions">
-                      <button
-                        className="um-action-btn"
-                        onClick={() => onEdit(user)}
-                        disabled={isBusy}
-                        title="编辑"
-                      >
-                        <Pencil size={13} />
-                        <span>编辑</span>
-                      </button>
-
-                      {user.status === 1 ? (
-                        <button
-                          className="um-action-btn um-action-btn--warn"
-                          onClick={() => handleStatusToggle(user)}
-                          disabled={isBusy}
-                          title="禁用"
-                        >
-                          {isBusy ? (
-                            <Loader size={13} className="spin" />
-                          ) : (
-                            <UserX size={13} />
-                          )}
-                          <span>禁用</span>
-                        </button>
-                      ) : (
-                        <button
-                          className="um-action-btn um-action-btn--ok"
-                          onClick={() => handleStatusToggle(user)}
-                          disabled={isBusy}
-                          title="启用"
-                        >
-                          {isBusy ? (
-                            <Loader size={13} className="spin" />
-                          ) : (
-                            <UserCheck size={13} />
-                          )}
-                          <span>启用</span>
-                        </button>
-                      )}
-
-                      <button
-                        className="um-action-btn um-action-btn--danger"
-                        onClick={() => handleDelete(user)}
-                        disabled={isBusy}
-                        title="删除"
-                      >
-                        <Trash2 size={13} />
-                        <span>删除</span>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* pagination */}
-      {total > 0 && (
-        <div className="um-pagination">
-          <div className="um-pagination-info">共 {total} 条</div>
-
-          <div className="um-pagination-controls">
-            <div className="um-pagination-size">
-              <select
-                value={pageSize}
-                onChange={(e) => onPageChange(1, Number(e.target.value))}
-                className="um-page-size-select"
-              >
-                {pageSizeOptions.map((s) => (
-                  <option key={s} value={s}>
-                    {s} 条/页
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <button
-              className="um-page-btn"
-              disabled={page <= 1 || loading}
-              onClick={() => onPageChange(page - 1, pageSize)}
-            >
-              上一页
-            </button>
-
-            <span className="um-page-indicator">
-              {page} / {totalPages}
-            </span>
-
-            <button
-              className="um-page-btn"
-              disabled={page >= totalPages || loading}
-              onClick={() => onPageChange(page + 1, pageSize)}
-            >
-              下一页
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    <Table<UserRecord>
+      rowKey="id"
+      columns={columns}
+      dataSource={users}
+      loading={loading}
+      pagination={pagination}
+      scroll={{ x: 1000 }}
+      locale={{
+        emptyText: '暂无用户数据',
+      }}
+    />
+  )
 }
