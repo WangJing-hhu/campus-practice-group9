@@ -1,7 +1,7 @@
 package com.group9.campusqa.controller;
 
 import com.group9.campusqa.common.Result;
-import com.group9.campusqa.entity.SysUser;
+import com.group9.campusqa.entity.User;
 import com.group9.campusqa.service.SysUserService;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,9 +24,9 @@ public class SysUserController {
      * 查询所有用户
      */
     @GetMapping
-    public Result<List<SysUser>> list() {
+    public Result<List<User>> list() {
 
-        List<SysUser> users = sysUserService.list();
+        List<User> users = sysUserService.list();
 
         return Result.success(users);
     }
@@ -36,11 +36,11 @@ public class SysUserController {
      * 根据id查询用户
      */
     @GetMapping("/{id}")
-    public Result<SysUser> getById(
+    public Result<User> getById(
             @PathVariable Long id
     ) {
 
-        SysUser user = sysUserService.getById(id);
+        User user = sysUserService.getById(id);
 
         return Result.success(user);
     }
@@ -51,7 +51,7 @@ public class SysUserController {
      */
     @PostMapping
     public Result<Boolean> save(
-            @RequestBody SysUser user
+            @RequestBody User user
     ) {
 
         boolean result = sysUserService.save(user);
@@ -66,7 +66,7 @@ public class SysUserController {
     @PutMapping("/{id}")
     public Result<Boolean> update(
             @PathVariable Long id,
-            @RequestBody SysUser user
+            @RequestBody User user
     ) {
 
         user.setId(id);
