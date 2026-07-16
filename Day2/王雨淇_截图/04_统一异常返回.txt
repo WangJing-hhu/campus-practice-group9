@@ -1,0 +1,6 @@
+===== Global Exception Handler =====
+BizException: 业务异常（code + message）
+MethodArgumentNotValidException: 参数校验异常（400）
+Exception: 兜底异常（500）
+
+已在 ApplicationSmokeTest 中验证异常类型正确。
