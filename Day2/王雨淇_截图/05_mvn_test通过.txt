@@ -1,0 +1,6 @@
+===== mvn test =====
+mvn test
+
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+Tomcat started on port 8081 (http)
