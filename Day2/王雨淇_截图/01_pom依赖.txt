@@ -1,0 +1,13 @@
+===== pom.xml 依赖清单 =====
+
+spring-boot-starter-web          Web 与 RESTful 接口
+mybatis-plus-spring-boot3-starter MyBatis-Plus CRUD/分页
+mysql-connector-j                MySQL 8 驱动
+spring-boot-starter-validation   参数校验 @Valid
+spring-security-crypto           BCrypt 密码加密
+jjwt-api / jjwt-impl / jjwt-jackson  JWT Token 生成与解析
+lombok                           @Data 自动生成 getter/setter
+spring-boot-starter-test         JUnit 5 测试框架
+spring-boot-maven-plugin         打包插件
+
+Java 17 | Spring Boot 3.2.7 | MyBatis-Plus 3.5.7 | JJWT 0.12.6

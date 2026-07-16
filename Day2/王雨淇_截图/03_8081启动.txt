@@ -1,0 +1,3 @@
+===== Spring Boot 8081 Startup =====
+Tomcat started on port 8081 (http) with context path ''
+Started CampusQaApplication in 1.493 seconds

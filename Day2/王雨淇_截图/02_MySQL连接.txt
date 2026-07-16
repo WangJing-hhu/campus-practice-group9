@@ -1,0 +1,19 @@
+===== MySQL Connection =====
+Database
+campus_qa
+information_schema
+mysql
+performance_schema
+sys
+Field	Type	Null	Key	Default	Extra
+id	bigint	NO	PRI	NULL	auto_increment
+username	varchar(50)	NO	UNI	NULL	
+password	varchar(100)	NO		NULL	
+email	varchar(100)	NO	UNI	NULL	
+role	varchar(20)	NO	MUL	user	
+status	tinyint	NO	MUL	1	
+deleted	tinyint	NO		0	
+create_time	datetime	YES		NULL	
+update_time	datetime	YES		NULL	
+user_count
+1
