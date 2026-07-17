@@ -48,6 +48,7 @@ export function DocumentDetailModal({
         onCancel={onClose}
         footer={null}
         destroyOnClose
+        centered
         width={680}
       >
         <Alert type="info" message="暂无文档数据" showIcon />
@@ -101,6 +102,7 @@ export function DocumentDetailModal({
       onCancel={onClose}
       footer={footer}
       destroyOnClose
+      centered
       width={700}
     >
       <div className="kb-detail-modal">

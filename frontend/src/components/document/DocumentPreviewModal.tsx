@@ -65,6 +65,7 @@ export function DocumentPreviewModal({
         onCancel={onClose}
         footer={null}
         destroyOnClose
+        centered
         width={800}
       >
         <Alert type="info" message="暂无文档数据" showIcon />
@@ -221,6 +222,7 @@ export function DocumentPreviewModal({
       onCancel={onClose}
       footer={footer}
       destroyOnClose
+      centered
       width={860}
       className="kb-preview-modal"
     >

@@ -4,21 +4,19 @@
    使用 kb- 前缀，避免污染其他页面样式
    =================================================== */
 
-/* ---------- 搜索工具栏 ---------- */
+/* ---------- 搜索工具栏（CSS Grid 四列） ---------- */
 .kb-toolbar {
-  margin-bottom: 0;
-}
-
-.kb-toolbar-controls {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 220px 120px 120px;
+  gap: 16px;
   width: 100%;
+  align-items: center;
 }
 
-.kb-toolbar-keyword {
-  min-width: 200px;
-}
-
-.kb-toolbar-status {
-  min-width: 120px;
+.kb-toolbar > .kb-toolbar-keyword,
+.kb-toolbar > .kb-toolbar-status,
+.kb-toolbar > button {
+  width: 100%;
 }
 
 /* ---------- 处理阶段步骤条 ---------- */
@@ -50,10 +48,10 @@
 .kb-preview-text-content {
   margin: 0;
   white-space: pre-wrap;
-  word-break: break-all;
-  font-family: 'Courier New', Consolas, monospace;
-  font-size: 13px;
-  line-height: 1.6;
+  word-break: break-word;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.8;
   color: #1d1d1d;
 }
 
@@ -116,13 +114,16 @@
 
 /* ---------- 响应式适配 ---------- */
 @media (max-width: 900px) {
-  .kb-toolbar-keyword,
-  .kb-toolbar-status {
-    width: 100% !important;
+  .kb-toolbar {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 600px) {
+  .kb-toolbar {
+    grid-template-columns: 1fr;
+  }
+
   .kb-preview-text {
     max-height: 40vh;
   }

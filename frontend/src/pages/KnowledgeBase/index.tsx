@@ -6,6 +6,8 @@ import {
   deleteDocument,
   updateDocument,
   getDocumentDetail,
+  previewDocument,
+  downloadDocument,
 } from '../../api/document'
 import { DocumentUpload } from '../../components/document/DocumentUpload'
 import { DocumentToolbar } from '../../components/document/DocumentToolbar'
@@ -34,19 +36,25 @@ function getPreviewKind(fileType: string): PreviewKind {
 
 /**
  * 知识库管理页面容器
- * 负责：查询条件、分页、刷新、上传后列表更新、轮询、预览/下载 Blob 管理
- * 孙凤摇的列表/状态/操作组件通过 props 接入
+ *
+ * 搜索/筛选采用两阶段状态：
+ * - Toolbar 管理草稿条件（draftKeyword / draftStatus）
+ * - 本容器只持有"已应用"条件（appliedKeyword / appliedStatus）
+ * - 只有点击搜索/Enter 时才将草稿写入 applied 并请求列表
+ * - 重置清空两组条件并立即加载
  */
 export function KnowledgeBase() {
   const { isAdmin } = useAuthStore()
+
+  // 已应用的条件（实际用于 API 请求）
+  const [appliedKeyword, setAppliedKeyword] = useState('')
+  const [appliedStatus, setAppliedStatus] = useState<string>('')
 
   // 列表状态
   const [docs, setDocs] = useState<DocumentItem[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [pageSize] = useState(10)
-  const [keyword, setKeyword] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null)
 
@@ -58,20 +66,19 @@ export function KnowledgeBase() {
 
   // 预览状态
   const [previewLoading, setPreviewLoading] = useState(false)
-  // TODO: 待预览 API 就绪后使用
-  const [previewLoadingId] = useState<number | null>(null)
+  const [previewLoadingId, setPreviewLoadingId] = useState<number | null>(null)
   const [previewKind, setPreviewKind] = useState<PreviewKind>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [textContent, setTextContent] = useState<string | null>(null)
   const [previewError, setPreviewError] = useState<string | null>(null)
 
   // 下载状态
-  // TODO: 待下载 API 就绪后使用 setDownloadLoadingId
-  const [downloadLoadingId] = useState<number | null>(null)
+  const [downloadLoadingId, setDownloadLoadingId] = useState<number | null>(null)
 
   const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const mounted = useRef(true)
   const previewBlobUrl = useRef<string | null>(null)
+  const pollErrorCount = useRef(0)
 
   // 释放 Blob URL
   const revokePreviewUrl = useCallback(() => {
@@ -81,23 +88,28 @@ export function KnowledgeBase() {
     }
   }, [])
 
-  // 组件卸载时释放 Blob URL
+  // 组件卸载时释放 Blob URL 并清理轮询
   useEffect(() => {
     return () => {
       mounted.current = false
-      if (previewBlobUrl.current) {
-        URL.revokeObjectURL(previewBlobUrl.current)
-      }
+      revokePreviewUrl()
       if (pollTimer.current) {
         clearInterval(pollTimer.current)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [revokePreviewUrl])
 
   // ===== 加载列表 =====
-  const loadList = useCallback(async (p: number, kw: string, st: string) => {
-    setLoading(true)
+  const loadList = useCallback(async (
+    p: number,
+    kw: string,
+    st: string,
+    options?: { silent?: boolean },
+  ) => {
+    const silent = options?.silent ?? false
+    if (!silent) {
+      setLoading(true)
+    }
     try {
       const params: DocumentListParams = {
         page: p,
@@ -110,32 +122,43 @@ export function KnowledgeBase() {
       setDocs(result.records ?? [])
       setTotal(result.total ?? 0)
       setPage(result.current ?? p)
+      pollErrorCount.current = 0
     } catch {
-      // request.ts 拦截器统一提示
+      if (!silent) {
+        // request.ts 拦截器统一提示
+      } else {
+        pollErrorCount.current++
+        if (pollErrorCount.current % 30 === 0) {
+          console.warn('[轮询] 列表刷新失败，将在一段时间后重试')
+        }
+      }
     } finally {
-      if (mounted.current) setLoading(false)
+      if (!silent && mounted.current) {
+        setLoading(false)
+      }
     }
   }, [pageSize])
 
   // ===== 首次加载 =====
   useEffect(() => {
-    loadList(1, keyword, statusFilter)
+    loadList(1, appliedKeyword, appliedStatus)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ===== 状态轮询 =====
+  // ===== 状态轮询（静默，使用已应用条件） =====
   useEffect(() => {
     const hasProcessing = docs.some(
       (d) => d.status === 'PENDING' || d.status === 'PROCESSING',
     )
     if (hasProcessing && !pollTimer.current) {
       pollTimer.current = setInterval(() => {
-        loadList(page, keyword, statusFilter)
+        loadList(page, appliedKeyword, appliedStatus, { silent: true })
       }, POLL_INTERVAL)
     }
     if (!hasProcessing && pollTimer.current) {
       clearInterval(pollTimer.current)
       pollTimer.current = null
+      pollErrorCount.current = 0
     }
     return () => {
       if (pollTimer.current) {
@@ -143,35 +166,30 @@ export function KnowledgeBase() {
         pollTimer.current = null
       }
     }
-  }, [docs, page, keyword, statusFilter, loadList])
+  }, [docs, page, appliedKeyword, appliedStatus, loadList])
 
-  // ===== 搜索 =====
-  const handleSearch = (kw: string) => {
-    setKeyword(kw)
-    loadList(1, kw, statusFilter)
+  // ===== 搜索：Toolbar 点击搜索或按 Enter 时调用 =====
+  const handleSearch = (kw: string, st: string) => {
+    setAppliedKeyword(kw)
+    setAppliedStatus(st)
+    loadList(1, kw, st)
   }
 
-  // ===== 状态筛选 =====
-  const handleStatusFilter = (st: string) => {
-    setStatusFilter(st)
-    loadList(1, keyword, st)
-  }
-
-  // ===== 重置 =====
+  // ===== 重置：Toolbar 点击重置时调用 =====
   const handleReset = () => {
-    setKeyword('')
-    setStatusFilter('')
+    setAppliedKeyword('')
+    setAppliedStatus('')
     loadList(1, '', '')
   }
 
   // ===== 分页 =====
   const handlePageChange = (p: number) => {
-    loadList(p, keyword, statusFilter)
+    loadList(p, appliedKeyword, appliedStatus)
   }
 
   // ===== 上传成功后刷新 =====
   const handleUploadSuccess = () => {
-    loadList(1, keyword, statusFilter)
+    loadList(1, appliedKeyword, appliedStatus)
   }
 
   // ===== 删除 =====
@@ -183,7 +201,7 @@ export function KnowledgeBase() {
       const remaining = total - 1
       const newPage =
         remaining <= (page - 1) * pageSize && page > 1 ? page - 1 : page
-      loadList(newPage, keyword, statusFilter)
+      loadList(newPage, appliedKeyword, appliedStatus)
     } catch {
       // request.ts 统一提示
     } finally {
@@ -199,7 +217,7 @@ export function KnowledgeBase() {
       message.success('已开始重新处理')
       setDetailOpen(false)
       setSelectedDocument(null)
-      loadList(page, keyword, statusFilter)
+      loadList(page, appliedKeyword, appliedStatus)
     } catch {
       // request.ts 统一提示
     } finally {
@@ -228,13 +246,26 @@ export function KnowledgeBase() {
     setSelectedDocument(null)
   }
 
+  // ===== 详情弹窗打开期间，同步 selectedDocument 到最新列表数据 =====
+  // 轮询静默更新 docs 后，弹窗中的 Steps/状态也随之更新
+  useEffect(() => {
+    if (!detailOpen || !selectedDocument) return
+    const latest = docs.find((d) => d.id === selectedDocument.id)
+    if (latest) {
+      // shallow compare to avoid unnecessary re-render
+      if (
+        latest.status !== selectedDocument.status ||
+        latest.processStage !== selectedDocument.processStage ||
+        latest.chunkCount !== selectedDocument.chunkCount ||
+        latest.errorMessage !== selectedDocument.errorMessage
+      ) {
+        setSelectedDocument(latest)
+      }
+    }
+  }, [docs, detailOpen, selectedDocument])
+
   // ===== 打开预览 =====
-  // TODO: 待杨牧涵在 api/document.ts 中封装 previewDocument(docId) 后替换占位逻辑
-  //       接口约定：GET /api/doc/{id}/preview 返回 Blob（Content-Type: application/octet-stream）
-  //       PDF Blob → URL.createObjectURL(blob) → previewUrl
-  //       TXT Blob → blob.text() → textContent
-  //       unsupported → 不需要请求
-  const handleOpenPreview = (doc: DocumentItem) => {
+  const handleOpenPreview = async (doc: DocumentItem) => {
     const kind = getPreviewKind(doc.fileType)
 
     // 释放之前的 Blob URL
@@ -247,27 +278,37 @@ export function KnowledgeBase() {
     setTextContent(null)
     setPreviewError(null)
 
-    // 当前前端 API 封装未就绪，标记为加载完成但无内容
-    // TODO: 替换为真实请求——
-    //   setPreviewLoading(true)
-    //   try {
-    //     const blob = await previewDocument(doc.id)  // ← 杨牧涵封装
-    //     if (!mounted.current) return
-    //
-    //     if (kind === 'pdf') {
-    //       const url = URL.createObjectURL(blob)
-    //       previewBlobUrl.current = url
-    //       setPreviewUrl(url)
-    //     } else if (kind === 'txt') {
-    //       const text = await blob.text()
-    //       setTextContent(text)
-    //     }
-    //     // unsupported 不需要请求
-    //   } catch {
-    //     if (mounted.current) setPreviewError('预览加载失败，请稍后重试')
-    //   } finally {
-    //     if (mounted.current) setPreviewLoading(false)
-    //   }
+    // DOC/DOCX 不请求在线预览
+    if (kind === 'unsupported') return
+
+    // PDF / TXT 请求预览
+    setPreviewLoading(true)
+    setPreviewLoadingId(doc.id)
+    try {
+      const { blob } = await previewDocument(doc.id)
+      if (!mounted.current) return
+
+      if (kind === 'pdf') {
+        const url = URL.createObjectURL(blob)
+        previewBlobUrl.current = url
+        setPreviewUrl(url)
+      } else if (kind === 'txt') {
+        // 强制使用 UTF-8 解码，避免依赖不完整的响应头 charset
+        const buffer = await blob.arrayBuffer()
+        const text = new TextDecoder('utf-8').decode(buffer)
+        setTextContent(text)
+      }
+    } catch (err: unknown) {
+      if (mounted.current) {
+        const msg = err instanceof Error ? err.message : '预览加载失败'
+        setPreviewError(msg)
+      }
+    } finally {
+      if (mounted.current) {
+        setPreviewLoading(false)
+        setPreviewLoadingId(null)
+      }
+    }
   }
 
   // ===== 关闭预览 =====
@@ -279,37 +320,23 @@ export function KnowledgeBase() {
     setTextContent(null)
     setPreviewError(null)
     setPreviewLoading(false)
-
-    // 释放 Blob URL
+    setPreviewLoadingId(null)
     revokePreviewUrl()
   }
 
   // ===== 下载文档 =====
-  // TODO: 待杨牧涵在 api/document.ts 中封装 downloadDocument(docId) 后替换占位逻辑
-  //       接口约定：GET /api/doc/{id}/download 返回 Blob，响应头含 Content-Disposition
-  //       下载时创建临时 <a> 标签触发浏览器下载
-  const handleDownload = async (_doc: DocumentItem) => {
-    // TODO: 替换为真实请求——
-    //   setDownloadLoadingId(doc.id)
-    //   try {
-    //     const blob = await downloadDocument(doc.id)  // ← 杨牧涵封装
-    //     const url = URL.createObjectURL(blob)
-    //     const a = document.createElement('a')
-    //     a.href = url
-    //     a.download = doc.originalName || doc.title
-    //     document.body.appendChild(a)
-    //     a.click()
-    //     document.body.removeChild(a)
-    //     URL.revokeObjectURL(url)
-    //     message.success('下载已开始')
-    //   } catch {
-    //     // request.ts 统一提示
-    //   } finally {
-    //     if (mounted.current) setDownloadLoadingId(null)
-    //   }
-
-    // 占位：接口未就绪
-    message.info('下载功能将在后端接口就绪后开放')
+  const handleDownload = async (doc: DocumentItem) => {
+    setDownloadLoadingId(doc.id)
+    try {
+      await downloadDocument(doc.id)
+    } catch (err: unknown) {
+      if (mounted.current) {
+        const msg = err instanceof Error ? err.message : '下载失败'
+        message.error(msg)
+      }
+    } finally {
+      if (mounted.current) setDownloadLoadingId(null)
+    }
   }
 
   // ===== 非管理员 =====
@@ -330,12 +357,8 @@ export function KnowledgeBase() {
 
       <Card className="kb-section">
         <DocumentToolbar
-          keyword={keyword}
-          status={statusFilter}
           loading={loading}
-          onKeywordChange={setKeyword}
           onSearch={handleSearch}
-          onStatusChange={handleStatusFilter}
           onReset={handleReset}
         />
       </Card>
