@@ -3,12 +3,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Form, Input, Button, message } from 'antd'
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons'
 import { registerApi } from '../../api/auth'
-import { useAuthStore } from '../../store/auth'
 import '../../styles/auth.css'
 
 export function RegisterPage() {
   const [loading, setLoading] = useState(false)
-  const { login } = useAuthStore()
   const navigate = useNavigate()
 
   const onFinish = async (values: {
@@ -18,17 +16,9 @@ export function RegisterPage() {
   }) => {
     setLoading(true)
     try {
-      const data = await registerApi(values)
-      login(data.token, {
-        id: data.userId,
-        username: data.username,
-        email: values.email,
-        role: data.role,
-        status: 1,
-        createTime: '',
-      })
-      message.success('注册成功')
-      navigate('/admin')
+      await registerApi(values)
+      message.success('注册成功，请登录')
+      navigate('/login')
     } catch {
       // request.ts 拦截器统一处理
     } finally {
