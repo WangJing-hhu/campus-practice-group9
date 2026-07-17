@@ -28,6 +28,14 @@ public class DocumentVO {
     private String processStage;
     private String errorMessage;
     private Long createUserId;
+
+    // ── Day5 官网来源字段（可选，普通文档为 null） ──────
+    private String sourceUrl;
+    private String sourceSite;
+    private String category;
+    private java.time.LocalDate publishedAt;
+    private LocalDateTime crawledAt;
+
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 
@@ -65,6 +73,21 @@ public class DocumentVO {
 
     public Long getCreateUserId() { return createUserId; }
     public void setCreateUserId(Long createUserId) { this.createUserId = createUserId; }
+
+    public String getSourceUrl() { return sourceUrl; }
+    public void setSourceUrl(String sourceUrl) { this.sourceUrl = sourceUrl; }
+
+    public String getSourceSite() { return sourceSite; }
+    public void setSourceSite(String sourceSite) { this.sourceSite = sourceSite; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+
+    public java.time.LocalDate getPublishedAt() { return publishedAt; }
+    public void setPublishedAt(java.time.LocalDate publishedAt) { this.publishedAt = publishedAt; }
+
+    public LocalDateTime getCrawledAt() { return crawledAt; }
+    public void setCrawledAt(LocalDateTime crawledAt) { this.crawledAt = crawledAt; }
 
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }

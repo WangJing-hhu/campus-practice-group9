@@ -71,6 +71,23 @@ Desktop.ini
 # macOS ????
 .DS_Store
 
+# Day5 官网知识库：允许提交可复现配置与少量样例，禁止提交整站原始页和批量正文
+!knowledge-base/hhu-official/
+!knowledge-base/hhu-official/README.md
+!knowledge-base/hhu-official/source-list.csv
+!knowledge-base/hhu-official/manifest.json
+!knowledge-base/hhu-official/samples/
+!knowledge-base/hhu-official/samples/**
+knowledge-base/hhu-official/raw/
+knowledge-base/hhu-official/generated/
+
+# 继续禁止提交运行数据
+/storage/uploads/
+/ai-service/data/
+.env
+faiss.index
+metadata.json
+
 # ?? Day1 ? Day2 ???????
 !Day1/**/*.png
 !Day2/**/*.png
