@@ -1,23 +1,30 @@
-import os
 import httpx
+from pathlib import Path
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from .file_reader import file_reader
 from .embedding import embedding_service
 from .vector_store import vector_store
 from .settings import settings
 
-ALLOWED_DIRS = [
-    os.path.abspath("storage/uploads"),
-    os.path.abspath("D:/practice/campus-practice2/storage/uploads"),
-    os.path.abspath("D:/practice/campus-practice2/ai-service/tests/fixtures"),
-]
 ALLOWED_CALLBACK_PREFIX = "http://localhost:8081/api/doc/"
 
 
-def _validate_path(path: str):
-    abs_path = os.path.abspath(path)
-    if not any(abs_path.startswith(d) for d in ALLOWED_DIRS):
-        raise ValueError(f"不允许的文件路径: {path}")
+def _validate_path(path: str, extra_allowed_dirs: list[Path] | None = None):
+    """使用 Path.resolve() 和 is_relative_to() 严格校验路径，防止目录遍历攻击。"""
+    target = Path(path).resolve()
+
+    # 始终允许配置的上传目录
+    roots = [Path(settings.upload_dir).resolve()]
+
+    # 合并额外允许的目录（测试 fixtures 等由测试代码注入）
+    if extra_allowed_dirs:
+        roots.extend(extra_allowed_dirs)
+
+    for root in roots:
+        if target.is_relative_to(root):
+            return
+
+    raise ValueError(f"不允许的文件路径: {path}")
 
 
 class DocumentProcessor:
@@ -27,9 +34,11 @@ class DocumentProcessor:
             chunk_overlap=settings.chunk_overlap,
             separators=["\n\n", "\n", "。", "！", "？", "；", "，", " ", ""],
         )
+        # 额外允许的目录，测试代码可注入 fixtures 目录
+        self.extra_allowed_dirs: list[Path] = []
 
     def process(self, doc_id: int, path: str, title: str, callback_url: str | None = None):
-        _validate_path(path)
+        _validate_path(path, self.extra_allowed_dirs)
         vector_store.remove_by_doc_id(doc_id)
 
         self._callback(callback_url, doc_id, "EXTRACTING", "PROCESSING")

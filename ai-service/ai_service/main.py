@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Header
+from fastapi import FastAPI, HTTPException, Header, Depends
 from .schemas import (
     ProcessRequest,
     ProcessResponse,
@@ -20,7 +20,7 @@ def verify_internal_token(x_internal_token: str = Header(None)):
         raise HTTPException(status_code=401, detail="未授权")
 
 
-@app.post("/process", response_model=ProcessResponse, dependencies=[verify_internal_token])
+@app.post("/process", response_model=ProcessResponse, dependencies=[Depends(verify_internal_token)])
 def process(req: ProcessRequest):
     try:
         count = processor.process(
@@ -31,7 +31,7 @@ def process(req: ProcessRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/search", response_model=SearchResponse, dependencies=[verify_internal_token])
+@app.post("/search", response_model=SearchResponse, dependencies=[Depends(verify_internal_token)])
 def search(req: SearchRequest):
     vec = embedding_service.embed_query(req.question)
     results = vector_store.search(vec, req.top_k)
@@ -50,7 +50,7 @@ def search(req: SearchRequest):
     )
 
 
-@app.delete("/document/{doc_id}", response_model=DeleteResponse, dependencies=[verify_internal_token])
+@app.delete("/document/{doc_id}", response_model=DeleteResponse, dependencies=[Depends(verify_internal_token)])
 def delete_document(doc_id: int):
     count = vector_store.remove_by_doc_id(doc_id)
     return DeleteResponse(doc_id=doc_id, deleted_vectors=count, status="OK")

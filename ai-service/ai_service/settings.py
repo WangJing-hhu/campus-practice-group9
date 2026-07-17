@@ -20,6 +20,7 @@ class Settings:
         self.chunk_overlap: int = 50
         self.top_k_default: int = 5
         self.data_dir: str = "data"
-        self.callback_token: str = "ai-service-internal-token"
+        self.upload_dir: str = os.getenv("UPLOAD_DIR", "storage/uploads")
+        self.callback_token: str = os.getenv("AI_CALLBACK_TOKEN", "day4-internal-callback-token")
 
 settings = Settings()

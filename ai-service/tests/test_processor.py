@@ -6,6 +6,9 @@ from ai_service.embedding import embedding_service
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
+# 将测试 fixtures 目录注入处理器的允许目录列表
+processor.extra_allowed_dirs.append(FIXTURES.resolve())
+
 
 def test_process_txt():
     doc_id = 90001
