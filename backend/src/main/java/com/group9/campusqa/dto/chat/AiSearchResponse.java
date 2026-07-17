@@ -31,6 +31,17 @@ public class AiSearchResponse {
         private String content;
         private Double score;
 
+        // ── Day5 官网来源字段 ────────────────────
+        @JsonProperty("source_url")
+        private String sourceUrl;
+        @JsonProperty("source_site")
+        private String sourceSite;
+        private String category;
+        @JsonProperty("published_at")
+        private String publishedAt;
+        @JsonProperty("crawled_at")
+        private String crawledAt;
+
         public Long getDocId() { return docId; }
         public void setDocId(Long docId) { this.docId = docId; }
 
@@ -48,5 +59,18 @@ public class AiSearchResponse {
 
         public Double getScore() { return score; }
         public void setScore(Double score) { this.score = score; }
-    }
-}
+
+        public String getSourceUrl() { return sourceUrl; }
+        public void setSourceUrl(String sourceUrl) { this.sourceUrl = sourceUrl; }
+
+        public String getSourceSite() { return sourceSite; }
+        public void setSourceSite(String sourceSite) { this.sourceSite = sourceSite; }
+
+        public String getCategory() { return category; }
+        public void setCategory(String category) { this.category = category; }
+
+        public String getPublishedAt() { return publishedAt; }
+        public void setPublishedAt(String publishedAt) { this.publishedAt = publishedAt; }
+
+        public String getCrawledAt() { return crawledAt; }
+        public void setCrawledAt(String crawledAt) { this.crawledAt = crawledAt; }

@@ -31,6 +31,13 @@ public class SourceVO {
     /** 来源片段正文 */
     private String content;
 
+    // ── Day5 官网来源字段（可选，普通文档为 null） ──────
+    private String sourceUrl;
+    private String sourceSite;
+    private String category;
+    private String publishedAt;
+    private String crawledAt;
+
     // ── Getter / Setter ──────────────────────────────────
 
     public Integer getIndex() { return index; }
@@ -50,4 +57,19 @@ public class SourceVO {
 
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
+
+    public String getSourceUrl() { return sourceUrl; }
+    public void setSourceUrl(String sourceUrl) { this.sourceUrl = sourceUrl; }
+
+    public String getSourceSite() { return sourceSite; }
+    public void setSourceSite(String sourceSite) { this.sourceSite = sourceSite; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+
+    public String getPublishedAt() { return publishedAt; }
+    public void setPublishedAt(String publishedAt) { this.publishedAt = publishedAt; }
+
+    public String getCrawledAt() { return crawledAt; }
+    public void setCrawledAt(String crawledAt) { this.crawledAt = crawledAt; }
 }
