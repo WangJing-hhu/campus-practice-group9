@@ -3,7 +3,7 @@ import { useAuthStore } from '../store/auth'
 
 // ===== 开发模式：后端没跑时临时绕过登录校验 =====
 // 后端联调完成后把这行改成 false
-const DEV_BYPASS_AUTH = true
+const DEV_BYPASS_AUTH = false
 
 function ensureDevBypass() {
   if (!DEV_BYPASS_AUTH) return
