@@ -1,15 +1,24 @@
 package com.group9.campusqa.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 
 public class AiProcessRequest {
 
+
+    @JsonProperty("doc_id")
     private Long docId;
+
 
     private String path;
 
+
     private String title;
 
+
+    @JsonProperty("callback_url")
     private String callbackUrl;
+
 
 
     public Long getDocId() {
@@ -20,6 +29,7 @@ public class AiProcessRequest {
         this.docId = docId;
     }
 
+
     public String getPath() {
         return path;
     }
@@ -27,6 +37,7 @@ public class AiProcessRequest {
     public void setPath(String path) {
         this.path = path;
     }
+
 
     public String getTitle() {
         return title;
@@ -36,6 +47,7 @@ public class AiProcessRequest {
         this.title = title;
     }
 
+
     public String getCallbackUrl() {
         return callbackUrl;
     }
@@ -43,8 +55,5 @@ public class AiProcessRequest {
     public void setCallbackUrl(String callbackUrl) {
         this.callbackUrl = callbackUrl;
     }
-    
-
 
 }
-

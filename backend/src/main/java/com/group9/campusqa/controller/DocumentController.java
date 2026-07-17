@@ -5,6 +5,7 @@ import com.group9.campusqa.entity.KbDocument;
 import com.group9.campusqa.service.DocumentProcessService;
 import com.group9.campusqa.service.DocumentService;
 
+
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,6 +19,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/doc")
 public class DocumentController {
+
 
 
     private final DocumentService documentService;
@@ -37,30 +39,56 @@ public class DocumentController {
 
 
 
+
+
+    /**
+     * 上传文档
+     */
     @PostMapping("/upload")
     public Long upload(
             @RequestParam("file") MultipartFile file
     ) throws Exception {
 
 
-        // 保存路径
+
         String fileName =
                 UUID.randomUUID()
                 +"_"
                 +file.getOriginalFilename();
 
 
-        String path =
-                "/tmp/"
-                +fileName;
+
+        // 建议使用项目data目录
+      File uploadDir = new File("data/uploads");
+
+if(!uploadDir.exists()){
+    uploadDir.mkdirs();
+}
+
+
+String path =
+        "data/uploads/"
+        + fileName;
+
+        File target =
+                new File(path);
 
 
 
-        file.transferTo(new File(path));
+        if(!target.getParentFile().exists()){
+            target.getParentFile().mkdirs();
+        }
 
 
 
-        KbDocument doc=new KbDocument();
+        file.transferTo(target);
+
+
+
+
+        KbDocument doc =
+                new KbDocument();
+
 
 
         doc.setTitle(
@@ -68,15 +96,20 @@ public class DocumentController {
         );
 
 
+
         doc.setOriginalName(
                 file.getOriginalFilename()
         );
 
 
-        doc.setStoredName(fileName);
+        doc.setStoredName(
+                fileName
+        );
 
 
-        doc.setFilePath(path);
+        doc.setFilePath(
+                path
+        );
 
 
         doc.setFileSize(
@@ -84,10 +117,15 @@ public class DocumentController {
         );
 
 
-        doc.setStatus("PENDING");
+
+        doc.setStatus(
+                "PENDING"
+        );
 
 
-        doc.setProcessStage("UPLOADED");
+        doc.setProcessStage(
+                "UPLOADED"
+        );
 
 
 
@@ -95,35 +133,71 @@ public class DocumentController {
 
 
 
-        // 异步调用Python处理
+        // 调用Python处理
         processService.processDocument(
                 doc.getId()
         );
 
 
+
         return doc.getId();
 
     }
-    @PostMapping("/callback")
-public void callback(
-        @RequestBody Map<String,Object> body
-){
 
-    Long docId =
-        Long.valueOf(
-            body.get("doc_id").toString()
+
+
+
+
+    /**
+     * Python处理完成回调
+     */
+    @PostMapping("/callback")
+    public Map<String,String> callback(
+            @RequestBody Map<String,Object> body
+    ){
+
+
+
+        if(body.get("doc_id")==null){
+
+            throw new RuntimeException(
+                    "缺少doc_id"
+            );
+        }
+
+
+
+        Long docId =
+                Long.valueOf(
+                    body.get("doc_id").toString()
+                );
+
+
+
+        String status =
+                body.get("status")==null
+                ?
+                "FAILED"
+                :
+                body.get("status").toString();
+
+
+
+
+        documentService.updateStatus(
+                docId,
+                status,
+                body
         );
 
 
-    String status =
-        body.get("status").toString();
 
+        return Map.of(
+                "message",
+                "success"
+        );
 
-    documentService.updateStatus(
-        docId,
-        status,
-        body
-    );
-}
+    }
+
 
 }
