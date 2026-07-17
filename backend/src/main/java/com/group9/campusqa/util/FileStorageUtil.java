@@ -111,15 +111,27 @@ public class FileStorageUtil {
     /**
      * 删除物理文件（幂等：文件不存在时只记录日志，不抛异常）。
      *
+     * <p>安全约束：删除前校验目标路径必须在 uploadDir 目录内，
+     * 防止路径穿越误删系统文件。</p>
+     *
      * @param absolutePath 文件绝对路径
+     * @throws BizException 路径不在上传目录内
      */
     public void deleteFile(String absolutePath) {
         if (absolutePath == null || absolutePath.isBlank()) {
             return;
         }
+
+        // 安全检查：确保要删除的文件位于上传目录内
+        Path root = Paths.get(uploadDir).toAbsolutePath().normalize();
+        Path target = Paths.get(absolutePath).toAbsolutePath().normalize();
+        if (!target.startsWith(root)) {
+            log.error("拒绝删除上传目录外的文件: {} (uploadDir={})", target, root);
+            throw new BizException(ResultCode.BAD_REQUEST, "非法文件路径");
+        }
+
         try {
-            Path path = Paths.get(absolutePath);
-            boolean deleted = Files.deleteIfExists(path);
+            boolean deleted = Files.deleteIfExists(target);
             if (deleted) {
                 log.info("文件已删除: {}", absolutePath);
             } else {
