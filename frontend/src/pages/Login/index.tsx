@@ -23,10 +23,10 @@ export function LoginPage() {
         status: 1,
         createTime: '',
       })
-      message.success('????')
+      message.success('登录成功')
       navigate('/admin')
     } catch {
-      // request.ts ???????
+      // request.ts 拦截器统一处理
     } finally {
       setLoading(false)
     }
@@ -34,63 +34,79 @@ export function LoginPage() {
 
   return (
     <div className="auth-page">
+      {/* 右上角导航 */}
+      <div className="auth-top-nav">
+        <Link to="/login" className="active">登录</Link>
+        <Link to="/register">注册</Link>
+      </div>
+
+      {/* 左上角校徽 */}
       <div className="auth-emblem-top">
-        <img src="/images/logo.svg" alt="????" />
+        <img src="/images/logo.svg" alt="河海大学" />
         <span className="emblem-text">HOHAI UNIVERSITY</span>
       </div>
 
+      {/* 右侧：品牌文字 + 登录卡片 */}
       <div className="auth-right">
         <div className="auth-hero">
-          <h1>??????</h1>
-          <div className="hero-subtitle">???????????</div>
+          <h1>校园问答助手</h1>
+          <div className="hero-subtitle">知识管理与智能问答平台</div>
           <div className="hero-motto">
-            ???? ? ????
+            艰苦朴素 · 实事求是
             <br />
-            ???? ? ????
+            严格要求 · 勇于探索
           </div>
         </div>
 
         <div className="auth-card">
-          <div className="card-title">
-            <h3>??</h3>
-            <div className="card-sub">????</div>
-          </div>
+        <div className="card-title">
+          <h3>登录</h3>
+          <div className="card-sub">欢迎回来</div>
+        </div>
 
-          <Form name="login" onFinish={onFinish} autoComplete="off" size="large">
-            <Form.Item name="username" rules={[{ required: true, message: '??????' }]}>
-              <Input
-                prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
-                placeholder="???"
-                autoComplete="username"
-              />
-            </Form.Item>
+        <Form name="login" onFinish={onFinish} autoComplete="off" size="large">
+          <Form.Item
+            name="username"
+            rules={[{ required: true, message: '请输入用户名' }]}
+          >
+            <Input
+              prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
+              placeholder="用户名"
+              autoComplete="username"
+            />
+          </Form.Item>
 
-            <Form.Item
-              name="password"
-              rules={[
-                { required: true, message: '?????' },
-                { min: 6, message: '????6?' },
-              ]}
+          <Form.Item
+            name="password"
+            rules={[
+              { required: true, message: '请输入密码' },
+              { min: 6, message: '密码至少6位' },
+            ]}
+          >
+            <Input.Password
+              prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
+              placeholder="密码"
+              autoComplete="current-password"
+            />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0 }}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              className="auth-btn"
             >
-              <Input.Password
-                prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
-                placeholder="??"
-                autoComplete="current-password"
-              />
-            </Form.Item>
+              登 录
+            </Button>
+          </Form.Item>
+        </Form>
 
-            <Form.Item style={{ marginBottom: 0 }}>
-              <Button type="primary" htmlType="submit" loading={loading} className="auth-btn">
-                ? ?
-              </Button>
-            </Form.Item>
-          </Form>
-
-          <div className="card-switch">
-            ??????<Link to="/register">????</Link>
-          </div>
+        <div className="card-switch">
+          还没有账号？<Link to="/register">创建账号</Link>
         </div>
       </div>
+    </div>
     </div>
   )
 }

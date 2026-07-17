@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Layout, Menu, Button, Dropdown } from 'antd'
 import {
   TeamOutlined,
+  FolderOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -25,19 +26,24 @@ export function AdminLayout() {
   }
 
   const userMenuItems: MenuProps['items'] = [
-    { key: 'logout', icon: <LogoutOutlined />, label: '????', onClick: handleLogout },
+    { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', onClick: handleLogout },
   ]
 
   const menuItems: MenuProps['items'] = [
-    { key: '/admin', icon: <DashboardOutlined />, label: '???' },
+    { key: '/admin', icon: <DashboardOutlined />, label: '工作台' },
     ...(isAdmin()
-      ? [{ key: '/admin/users', icon: <TeamOutlined />, label: '????' }]
+      ? [
+          { key: '/admin/users', icon: <TeamOutlined />, label: '用户管理' },
+          { key: '/admin/knowledge', icon: <FolderOutlined />, label: '知识库管理' },
+        ]
       : []),
   ]
 
-  const selectedKey = location.pathname.startsWith('/admin/users')
-    ? '/admin/users'
-    : '/admin'
+  const selectedKey = location.pathname.startsWith('/admin/knowledge')
+    ? '/admin/knowledge'
+    : location.pathname.startsWith('/admin/users')
+      ? '/admin/users'
+      : '/admin'
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -62,7 +68,7 @@ export function AdminLayout() {
             whiteSpace: 'nowrap',
           }}
         >
-          {collapsed ? 'HHU' : '???? ? ????'}
+          {collapsed ? 'HHU' : '河海大学 · 问答助手'}
         </div>
 
         <Menu
@@ -97,7 +103,7 @@ export function AdminLayout() {
             <span style={{ cursor: 'pointer', fontSize: 13, color: '#595959' }}>
               {user?.username}
               <span style={{ color: '#bbb', marginLeft: 8, fontSize: 12 }}>
-                {isAdmin() ? '???' : '??'}
+                {isAdmin() ? '管理员' : '用户'}
               </span>
             </span>
           </Dropdown>
