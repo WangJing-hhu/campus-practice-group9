@@ -54,7 +54,7 @@ export function KnowledgeBase() {
   const [docs, setDocs] = useState<DocumentItem[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
-  const [pageSize] = useState(10)
+  const [pageSize, setPageSize] = useState(10)
   const [loading, setLoading] = useState(false)
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null)
 
@@ -80,6 +80,10 @@ export function KnowledgeBase() {
   const previewBlobUrl = useRef<string | null>(null)
   const pollErrorCount = useRef(0)
 
+  // 详情请求竞态防护：序号 + 当前文档 ID
+  const detailRequestSequenceRef = useRef(0)
+  const activeDetailIdRef = useRef<DocumentItem['id'] | null>(null)
+
   // 释放 Blob URL
   const revokePreviewUrl = useCallback(() => {
     if (previewBlobUrl.current) {
@@ -88,10 +92,11 @@ export function KnowledgeBase() {
     }
   }, [])
 
-  // 组件卸载时释放 Blob URL 并清理轮询
+  // 组件卸载时释放 Blob URL、清理轮询、失效未完成详情请求
   useEffect(() => {
     return () => {
       mounted.current = false
+      detailRequestSequenceRef.current += 1
       revokePreviewUrl()
       if (pollTimer.current) {
         clearInterval(pollTimer.current)
@@ -104,16 +109,17 @@ export function KnowledgeBase() {
     p: number,
     kw: string,
     st: string,
-    options?: { silent?: boolean },
+    options?: { silent?: boolean; size?: number },
   ) => {
     const silent = options?.silent ?? false
+    const size = options?.size ?? pageSize
     if (!silent) {
       setLoading(true)
     }
     try {
       const params: DocumentListParams = {
         page: p,
-        size: pageSize,
+        size,
         keyword: kw || undefined,
         status: st || undefined,
       }
@@ -182,9 +188,13 @@ export function KnowledgeBase() {
     loadList(1, '', '')
   }
 
-  // ===== 分页 =====
-  const handlePageChange = (p: number) => {
-    loadList(p, appliedKeyword, appliedStatus)
+  // ===== 分页（pageSize 变化时 page 回退到 1） =====
+  const handlePaginationChange = (nextPage: number, nextPageSize: number) => {
+    const pageSizeChanged = nextPageSize !== pageSize
+    setPageSize(nextPageSize)
+    const targetPage = pageSizeChanged ? 1 : nextPage
+    setPage(targetPage)
+    loadList(targetPage, appliedKeyword, appliedStatus, { size: nextPageSize })
   }
 
   // ===== 上传成功后刷新 =====
@@ -225,25 +235,52 @@ export function KnowledgeBase() {
     }
   }
 
-  // ===== 打开详情 =====
+  // ===== 打开详情（防竞态：请求序号 + 活动文档 ID 双重校验） =====
   const handleOpenDetail = async (doc: DocumentItem) => {
+    const requestSequence = ++detailRequestSequenceRef.current
+    activeDetailIdRef.current = doc.id
+
     setSelectedDocument(doc)
     setDetailOpen(true)
     setDetailLoading(true)
+
     try {
       const detail = await getDocumentDetail(doc.id)
+
+      if (
+        requestSequence !== detailRequestSequenceRef.current ||
+        activeDetailIdRef.current !== doc.id
+      ) {
+        return
+      }
+
       if (mounted.current) setSelectedDocument(detail)
     } catch {
+      if (
+        requestSequence !== detailRequestSequenceRef.current ||
+        activeDetailIdRef.current !== doc.id
+      ) {
+        return
+      }
       // request.ts 统一提示
     } finally {
-      if (mounted.current) setDetailLoading(false)
+      if (
+        requestSequence === detailRequestSequenceRef.current &&
+        activeDetailIdRef.current === doc.id &&
+        mounted.current
+      ) {
+        setDetailLoading(false)
+      }
     }
   }
 
-  // ===== 关闭详情 =====
+  // ===== 关闭详情（递增序号使所有未完成请求失效） =====
   const handleCloseDetail = () => {
+    detailRequestSequenceRef.current += 1
+    activeDetailIdRef.current = null
     setDetailOpen(false)
     setSelectedDocument(null)
+    setDetailLoading(false)
   }
 
   // ===== 详情弹窗打开期间，同步 selectedDocument 到最新列表数据 =====
@@ -371,7 +408,7 @@ export function KnowledgeBase() {
           actionLoadingId={actionLoadingId}
           previewLoadingId={previewLoadingId}
           downloadLoadingId={downloadLoadingId}
-          onPageChange={handlePageChange}
+          onPaginationChange={handlePaginationChange}
           onDetail={handleOpenDetail}
           onPreview={handleOpenPreview}
           onDownload={handleDownload}

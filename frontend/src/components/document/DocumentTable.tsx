@@ -31,7 +31,7 @@ interface DocumentTableProps {
   previewLoadingId: number | null
   /** 正在下载的文档 id */
   downloadLoadingId: number | null
-  onPageChange: (page: number) => void
+  onPaginationChange: (page: number, pageSize: number) => void
   onDetail: (document: DocumentItem) => void
   onPreview: (document: DocumentItem) => void
   onDownload: (document: DocumentItem) => void
@@ -57,7 +57,7 @@ export function DocumentTable({
   actionLoadingId,
   previewLoadingId,
   downloadLoadingId,
-  onPageChange,
+  onPaginationChange,
   onDetail,
   onPreview,
   onDownload,
@@ -148,8 +148,8 @@ export function DocumentTable({
     showTotal: (total: number) => `共 ${total} 条`,
     showSizeChanger: true,
     pageSizeOptions: ['10', '20', '50'],
-    onChange: (page) => {
-      onPageChange(page)
+    onChange: (page, pageSize) => {
+      onPaginationChange(page, pageSize)
     },
   }
 

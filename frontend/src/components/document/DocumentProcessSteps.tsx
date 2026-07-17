@@ -35,18 +35,24 @@ export function DocumentProcessSteps({
 }: DocumentProcessStepsProps) {
   const stepIndex = (() => {
     if (!status) return 0
-    if (status === 'COMPLETED') return STEP_TITLES.length
+    if (status === 'COMPLETED') return STEP_TITLES.length - 1
     return processStage ? (STAGE_TO_STEP[processStage] ?? 0) : 0
   })()
 
+  // 边界保护：确保 current 永远在 [0, steps.length - 1] 范围内
+  const safeCurrent = Math.min(Math.max(stepIndex, 0), STEP_TITLES.length - 1)
+
   const isFailed = status === 'FAILED'
+  const isCompleted = status === 'COMPLETED'
+
+  const stepsStatus = isFailed ? 'error' : isCompleted ? 'finish' : 'process'
 
   return (
     <div className="kb-process-steps">
       <Steps
-        current={stepIndex}
+        current={safeCurrent}
         size="small"
-        status={isFailed ? 'error' : undefined}
+        status={stepsStatus}
         items={STEP_TITLES.map((title) => ({ title }))}
       />
       {isFailed && errorMessage && (

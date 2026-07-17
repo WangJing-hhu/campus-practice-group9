@@ -106,7 +106,7 @@ export function DocumentPreviewModal({
             src={previewUrl}
             title={`PDF 预览 - ${document.title}`}
             className="kb-preview-iframe-inner"
-            sandbox="allow-scripts allow-same-origin"
+            sandbox="allow-same-origin"
           />
         </div>
       )
