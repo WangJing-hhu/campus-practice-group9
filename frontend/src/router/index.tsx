@@ -3,6 +3,7 @@ import { GuestRoute, ProtectedRoute } from './ProtectedRoute'
 import { AdminLayout } from '../layouts/AdminLayout'
 import { LoginPage } from '../pages/Login'
 import { RegisterPage } from '../pages/Register'
+import { UserManagement } from '../pages/UserManagement'
 
 // ===== 应用路由配置 =====
 export function AppRouter() {
@@ -47,15 +48,8 @@ export function AppRouter() {
             </div>
           }
         />
-        {/* 用户管理页：由孙凤摇后续实现，这里先保留占位 */}
-        <Route
-          path="users"
-          element={
-            <div style={{ textAlign: 'center', padding: 60 }}>
-              <p style={{ color: '#888' }}>用户管理页面（等待孙凤摇实现）</p>
-            </div>
-          }
-        />
+        {/* 用户管理页：孙凤摇实现 */}
+        <Route path="users" element={<UserManagement />} />
       </Route>
 
       {/* 兜底：所有不认识的路径 → 重定向到 /admin */}
