@@ -55,6 +55,23 @@ public class KbDocument {
     /** 失败原因 */
     private String errorMessage;
 
+    // ── Day5 官网来源字段（可选） ──────────────────────────
+
+    /** 官网原文链接 */
+    private String sourceUrl;
+
+    /** 来源站点名称 */
+    private String sourceSite;
+
+    /** 内容分类 */
+    private String category;
+
+    /** 官网发布日期 */
+    private java.time.LocalDate publishedAt;
+
+    /** 抓取时间 */
+    private LocalDateTime crawledAt;
+
     /** 上传管理员 ID */
     private Long createUserId;
 
@@ -104,6 +121,21 @@ public class KbDocument {
 
     public String getErrorMessage() { return errorMessage; }
     public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
+
+    public String getSourceUrl() { return sourceUrl; }
+    public void setSourceUrl(String sourceUrl) { this.sourceUrl = sourceUrl; }
+
+    public String getSourceSite() { return sourceSite; }
+    public void setSourceSite(String sourceSite) { this.sourceSite = sourceSite; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+
+    public java.time.LocalDate getPublishedAt() { return publishedAt; }
+    public void setPublishedAt(java.time.LocalDate publishedAt) { this.publishedAt = publishedAt; }
+
+    public LocalDateTime getCrawledAt() { return crawledAt; }
+    public void setCrawledAt(LocalDateTime crawledAt) { this.crawledAt = crawledAt; }
 
     public Long getCreateUserId() { return createUserId; }
     public void setCreateUserId(Long createUserId) { this.createUserId = createUserId; }
