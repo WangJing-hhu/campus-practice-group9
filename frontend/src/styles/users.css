@@ -1,0 +1,58 @@
+/* ===================================================
+   用户管理模块 — 布局样式
+   组件样式由 Ant Design 负责，这里只写页面级布局
+   =================================================== */
+
+/* ---------- 页面容器 ---------- */
+.um-page {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* ---------- 区块间距 ---------- */
+.um-section {
+  margin-bottom: 16px;
+}
+
+/* ---------- 搜索工具栏 — CSS Grid ---------- */
+
+.um-search-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(260px, 2.2fr)
+    minmax(140px, 1fr)
+    minmax(140px, 1fr)
+    minmax(100px, 0.65fr)
+    minmax(100px, 0.65fr)
+    minmax(130px, 0.8fr);
+  gap: 16px;
+  width: 100%;
+  align-items: center;
+}
+
+/* 响应式：窄于 1100px → 两行 */
+@media (max-width: 1100px) {
+  .um-search-grid {
+    grid-template-columns:
+      minmax(200px, 2fr)
+      minmax(120px, 1fr)
+      minmax(120px, 1fr)
+      minmax(90px, 0.6fr)
+      minmax(90px, 0.6fr)
+      minmax(120px, 0.7fr);
+  }
+}
+
+/* 响应式：窄于 900px → 两行 3 列 */
+@media (max-width: 900px) {
+  .um-search-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* 响应式：窄于 700px → 单列 */
+@media (max-width: 700px) {
+  .um-search-grid {
+    grid-template-columns: 1fr;
+  }
+}
