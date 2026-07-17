@@ -16,19 +16,23 @@ backend/data/uploads/
 
 frontend/node_modules/
 frontend/dist/
+/node_modules/
+/dist/
+/package-lock.json
+*.tsbuildinfo
 
-# 本地构建产物与备份
+# ?????????
 output/
 .playwright-mcp/
 site-snapshot-full/
 *.png
 !docs/screenshots/*.png
 
-# Demo 向量库 release asset 与临时文件
+# Demo ??? release asset ?????
 campus-qa-demo-index-*.tar.gz
 .tmp-demo-index.tar.gz
 
-# 全量知识库不上传，仅保留 knowledge-base/demo/ 用于演示
+# ???????????? knowledge-base/demo/ ????
 knowledge-base/*/
 !knowledge-base/demo/
 !knowledge-base/README.md
@@ -36,6 +40,7 @@ knowledge-base/*/
 
 # Java / Spring Boot / Maven
 backend/target/
+backend/.mvn/maven/
 **/target/
 *.class
 *.log
@@ -50,22 +55,22 @@ backend/target/
 # VS Code
 .vscode/
 
-# Spring Boot 本地敏感配置
+# Spring Boot ??????
 backend/src/main/resources/application-local.yml
 backend/src/main/resources/application-secret.yml
 
-# 环境变量与密钥
+# ???????
 .env
 *.env
 !.env.example
 
-# Windows 临时文件
+# Windows ????
 Thumbs.db
 Desktop.ini
 
-# macOS 临时文件
+# macOS ????
 .DS_Store
 
-# 允许 Day1 和 Day2 中保存正式截图
+# ?? Day1 ? Day2 ???????
 !Day1/**/*.png
 !Day2/**/*.png
