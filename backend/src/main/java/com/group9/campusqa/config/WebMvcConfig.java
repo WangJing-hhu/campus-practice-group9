@@ -16,8 +16,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/api/**")
-                .excludePathPatterns(
-                        "/api/auth/login", // 假设原来的登录放行
+                .excludePathPatterns("/api/user/login", 
+                        "/api/user/register",
+                        "/api/health",
                         "/api/doc/callback",           // 🌟 必须放行 callback
                         "/api/doc/*/preview",          // 🌟 必须放行 preview
                         "/api/doc/*/download"          // 🌟 必须放行 download

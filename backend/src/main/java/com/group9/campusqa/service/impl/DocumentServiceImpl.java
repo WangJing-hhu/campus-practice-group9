@@ -61,9 +61,10 @@ public class DocumentServiceImpl extends ServiceImpl<KbDocumentMapper, KbDocumen
     public Page<DocumentVO> queryPage(int page, int size, String keyword, String status) {
         LambdaQueryWrapper<KbDocument> wrapper = new LambdaQueryWrapper<>();
 
+       // 使用 Lambda 嵌套组装 (title LIKE '%xxx%' OR original_name LIKE '%xxx%')
         if (StringUtils.hasText(keyword)) {
-            wrapper.like(KbDocument::getTitle, keyword)
-                   .or().like(KbDocument::getOriginalName, keyword);
+            wrapper.and(w -> w.like(KbDocument::getTitle, keyword)
+                              .or().like(KbDocument::getOriginalName, keyword));
         }
         if (StringUtils.hasText(status)) {
             wrapper.eq(KbDocument::getStatus, status);

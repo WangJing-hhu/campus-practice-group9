@@ -12,6 +12,8 @@ import com.group9.campusqa.dto.CallbackRequest; // 引入回调DTO
 import com.group9.campusqa.dto.AiSearchRequest;
 import com.group9.campusqa.util.FileStorageUtil;
 import com.group9.campusqa.context.UserContext;
+import org.springframework.http.MediaType;
+import com.group9.campusqa.dto.DocumentUpdateDTO;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -98,13 +100,25 @@ public class DocumentController {
     }
 
     // 🌟 修复 3：支持 multipart 文件替换和标题修改
-    @PutMapping("/{id}")
-    public Result<String> update(
-            @PathVariable Long id, 
+   // 1. 专门处理前端【只修改标题】的场景 (接收 JSON Body)
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public Result<String> updateTitle(@PathVariable Long id, @RequestBody DocumentUpdateDTO req) {
+        checkAdminRole();
+        // 调用 service，文件传 null，只更新标题
+        documentService.updateDocument(id, null, req.getTitle());
+        documentService.retryProcess(id);
+        processService.processDocument(id);
+        return Result.success("success");
+    }
+
+    // 2. 专门处理前端【替换文件或同时改标题】的场景 (接收 FormData)
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Result<String> replaceFile(
+            @PathVariable Long id,
             @RequestParam(value = "file", required = false) MultipartFile file,
             @RequestParam(value = "title", required = false) String title) {
         checkAdminRole();
-        documentService.updateDocument(id, file, title); 
+        documentService.updateDocument(id, file, title);
         documentService.retryProcess(id);
         processService.processDocument(id);
         return Result.success("success");
@@ -139,7 +153,8 @@ public class DocumentController {
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody CallbackRequest body 
     ){
-        if (authHeader == null || !authHeader.replace("Bearer ", "").equals(expectedToken)) {
+        // 规范严谨的 Token 校验写法
+        if (authHeader == null || !authHeader.startsWith("Bearer ") || !authHeader.substring(7).equals(expectedToken)) {
             throw new BizException(401, "Invalid Token");
         }
         if (body.getDocId() == null) {
