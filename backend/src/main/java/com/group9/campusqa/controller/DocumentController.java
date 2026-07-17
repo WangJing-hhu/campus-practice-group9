@@ -1,17 +1,21 @@
 package com.group9.campusqa.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.group9.campusqa.common.Result; // 引入你的统一 Result
+import com.group9.campusqa.common.Result;
+import com.group9.campusqa.common.ResultCode; // 引入统一状态码
+import com.group9.campusqa.exception.BizException; // 引入统一异常
 import com.group9.campusqa.entity.KbDocument;
 import com.group9.campusqa.service.DocumentProcessService;
 import com.group9.campusqa.service.DocumentService;
 import com.group9.campusqa.vo.DocumentVO;
-import com.group9.campusqa.dto.DocumentUpdateDTO;
-import com.group9.campusqa.dto.AiSearchRequest; // 使用已有的搜索类
+import com.group9.campusqa.dto.CallbackRequest; // 引入回调DTO
+import com.group9.campusqa.dto.AiSearchRequest;
 import com.group9.campusqa.util.FileStorageUtil;
 import com.group9.campusqa.context.UserContext;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpServletResponse;
@@ -39,14 +43,17 @@ public class DocumentController {
         this.fileStorageUtil = fileStorageUtil;
     }
 
+    // 🌟 修复 5：使用 BizException + FORBIDDEN
     private void checkAdminRole() {
         if (!"admin".equals(UserContext.get().role())) {
-            throw new RuntimeException("403 Forbidden");
+            // 注意：如果你们的 ResultCode 里不叫 FORBIDDEN 而是 UNAUTHORIZED 等，请以王雨淇的定义为准
+            throw new BizException(403, "无管理员权限"); 
         }
     }
 
+    // 🌟 修复 4：上传接口返回完整 DocumentVO
     @PostMapping("/upload")
-    public Result<Long> upload(@RequestParam("file") MultipartFile file) {
+    public Result<DocumentVO> upload(@RequestParam("file") MultipartFile file) {
         checkAdminRole();
 
         FileStorageUtil.StoredFile storedFile = fileStorageUtil.save(file);
@@ -68,7 +75,9 @@ public class DocumentController {
         documentService.saveDocument(doc);
         processService.processDocument(doc.getId());
 
-        return Result.success(doc.getId()); // 使用统一 Result
+        DocumentVO vo = new DocumentVO();
+        BeanUtils.copyProperties(doc, vo);
+        return Result.success(vo);
     }
 
     @GetMapping("/list")
@@ -79,19 +88,23 @@ public class DocumentController {
             @RequestParam(required = false) String status
     ){
         checkAdminRole();
-        return Result.success(documentService.queryPage(page, size, keyword, status)); // 使用统一 Result
+        return Result.success(documentService.queryPage(page, size, keyword, status));
     }
-
+    
     @GetMapping("/{id}")
     public Result<DocumentVO> detail(@PathVariable Long id){
         checkAdminRole();
         return Result.success(documentService.queryById(id));
     }
 
+    // 🌟 修复 3：支持 multipart 文件替换和标题修改
     @PutMapping("/{id}")
-    public Result<String> update(@PathVariable Long id, @RequestBody DocumentUpdateDTO req){
+    public Result<String> update(
+            @PathVariable Long id, 
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "title", required = false) String title) {
         checkAdminRole();
-        documentService.updateDocument(id, req);
+        documentService.updateDocument(id, file, title); 
         documentService.retryProcess(id);
         processService.processDocument(id);
         return Result.success("success");
@@ -115,27 +128,26 @@ public class DocumentController {
     }
 
     @PostMapping("/search")
-    public Result<?> search(@RequestBody AiSearchRequest req){ // 替换为 AiSearchRequest
+    public Result<?> search(@RequestBody AiSearchRequest req){
         checkAdminRole();
         return Result.success(processService.semanticSearch(req.getQuestion(), req.getTopK()));
     }
 
+    // 🌟 修复 6：使用 CallbackRequest
     @PostMapping("/callback")
     public Map<String,String> callback(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestBody Map<String,Object> body
+            @RequestBody CallbackRequest body 
     ){
         if (authHeader == null || !authHeader.replace("Bearer ", "").equals(expectedToken)) {
-            throw new RuntimeException("401 Unauthorized: Invalid Token");
+            throw new BizException(401, "Invalid Token");
         }
-        if (body.get("doc_id") == null) {
-            throw new RuntimeException("缺少doc_id");
+        if (body.getDocId() == null) {
+            throw new BizException(400, "缺少doc_id");
         }
 
-        Long docId = Long.valueOf(body.get("doc_id").toString());
-        String status = body.get("status") == null ? "FAILED" : body.get("status").toString();
-
-        documentService.updateStatus(docId, status, body);
+        // 把原来传 Map 改为直接处理 DTO 字段
+        documentService.updateStatusFromCallback(body); 
         return Map.of("message", "success");
     }
 }
