@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Modal, Form, Input, Select } from 'antd'
 import type { UserRecord, UserUpdatePayload, UserCreatePayload } from '../../api/user'
 
-// ===== ???? / ???????? =====
+// ===== 用户新增 / 编辑弹窗（共用） =====
 
 interface UserEditModalProps {
   open: boolean
@@ -26,7 +26,7 @@ export function UserEditModal({
   const [form] = Form.useForm()
   const isCreate = mode === 'create'
 
-  // ?????????
+  // 打开时加载表单数据
   useEffect(() => {
     if (!open) return
     if (isCreate) {
@@ -39,7 +39,7 @@ export function UserEditModal({
     }
   }, [open, mode, user, form, isCreate])
 
-  // ?????
+  // 关闭后清理
   const handleClose = () => {
     form.resetFields()
     onCancel()
@@ -62,8 +62,8 @@ export function UserEditModal({
     }
   }
 
-  const title = isCreate ? '????' : '??????'
-  const okText = isCreate ? '??' : '??'
+  const title = isCreate ? '新增用户' : '编辑用户信息'
+  const okText = isCreate ? '创建' : '保存'
 
   return (
     <Modal
@@ -76,7 +76,7 @@ export function UserEditModal({
       mask={{ closable: !loading }}
       centered
       okText={okText}
-      cancelText="??"
+      cancelText="取消"
       width={480}
     >
       <Form
@@ -86,41 +86,41 @@ export function UserEditModal({
         preserve={false}
         size="middle"
       >
-        {/* ??? */}
+        {/* 用户名 */}
         {isCreate ? (
           <Form.Item
             name="username"
-            label="???"
+            label="用户名"
             rules={[
-              { required: true, message: '??????' },
-              { min: 2, max: 50, message: '?????2?50?' },
+              { required: true, message: '请输入用户名' },
+              { min: 2, max: 50, message: '用户名长度2—50位' },
             ]}
           >
             <Input
-              placeholder="??????"
+              placeholder="请输入用户名"
               disabled={loading}
               autoComplete="off"
             />
           </Form.Item>
         ) : (
-          <Form.Item label="???">
+          <Form.Item label="用户名">
             <Input value={user?.username ?? ''} readOnly disabled />
           </Form.Item>
         )}
 
-        {/* ??????? */}
+        {/* 密码（仅新增） */}
         {isCreate && (
           <>
             <Form.Item
               name="password"
-              label="??"
+              label="密码"
               rules={[
-                { required: true, message: '?????' },
-                { min: 6, max: 72, message: '????6?72?' },
+                { required: true, message: '请输入密码' },
+                { min: 6, max: 72, message: '密码长度6—72位' },
               ]}
             >
               <Input.Password
-                placeholder="?????"
+                placeholder="请输入密码"
                 disabled={loading}
                 autoComplete="new-password"
               />
@@ -128,22 +128,22 @@ export function UserEditModal({
 
             <Form.Item
               name="confirmPassword"
-              label="????"
+              label="确认密码"
               dependencies={['password']}
               rules={[
-                { required: true, message: '???????' },
+                { required: true, message: '请再次输入密码' },
                 ({ getFieldValue }) => ({
                   validator(_, value) {
                     if (!value || getFieldValue('password') === value) {
                       return Promise.resolve()
                     }
-                    return Promise.reject(new Error('??????????'))
+                    return Promise.reject(new Error('两次输入的密码不一致'))
                   },
                 }),
               ]}
             >
               <Input.Password
-                placeholder="???????"
+                placeholder="请再次输入密码"
                 disabled={loading}
                 autoComplete="new-password"
               />
@@ -151,30 +151,30 @@ export function UserEditModal({
           </>
         )}
 
-        {/* ?? */}
+        {/* 邮箱 */}
         <Form.Item
           name="email"
-          label="??"
+          label="邮箱"
           rules={[
-            { required: true, message: '??????' },
-            { type: 'email', message: '??????????' },
+            { required: true, message: '邮箱不能为空' },
+            { type: 'email', message: '请输入正确的邮箱格式' },
           ]}
         >
-          <Input placeholder="???????" disabled={loading} />
+          <Input placeholder="请输入邮箱地址" disabled={loading} />
         </Form.Item>
 
-        {/* ?? */}
+        {/* 角色 */}
         <Form.Item
           name="role"
-          label="??"
+          label="角色"
           initialValue="user"
-          rules={[{ required: true, message: '?????' }]}
+          rules={[{ required: true, message: '请选择角色' }]}
         >
           <Select
             disabled={loading}
             options={[
-              { value: 'user', label: '????' },
-              { value: 'admin', label: '???' },
+              { value: 'user', label: '普通用户' },
+              { value: 'admin', label: '管理员' },
             ]}
           />
         </Form.Item>
@@ -182,15 +182,15 @@ export function UserEditModal({
         {isCreate && (
           <Form.Item
             name="status"
-            label="??"
+            label="状态"
             initialValue={1}
-            rules={[{ required: true, message: '?????' }]}
+            rules={[{ required: true, message: '请选择状态' }]}
           >
             <Select
               disabled={loading}
               options={[
-                { value: 1, label: '??' },
-                { value: 0, label: '??' },
+                { value: 1, label: '启用' },
+                { value: 0, label: '禁用' },
               ]}
             />
           </Form.Item>
