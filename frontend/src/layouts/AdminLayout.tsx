@@ -25,13 +25,13 @@ export function AdminLayout() {
   }
 
   const userMenuItems: MenuProps['items'] = [
-    { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', onClick: handleLogout },
+    { key: 'logout', icon: <LogoutOutlined />, label: '????', onClick: handleLogout },
   ]
 
   const menuItems: MenuProps['items'] = [
-    { key: '/admin', icon: <DashboardOutlined />, label: '工作台' },
+    { key: '/admin', icon: <DashboardOutlined />, label: '???' },
     ...(isAdmin()
-      ? [{ key: '/admin/users', icon: <TeamOutlined />, label: '用户管理' }]
+      ? [{ key: '/admin/users', icon: <TeamOutlined />, label: '????' }]
       : []),
   ]
 
@@ -62,7 +62,7 @@ export function AdminLayout() {
             whiteSpace: 'nowrap',
           }}
         >
-          {collapsed ? 'HHU' : '河海大学 · 问答助手'}
+          {collapsed ? 'HHU' : '???? ? ????'}
         </div>
 
         <Menu
@@ -97,7 +97,7 @@ export function AdminLayout() {
             <span style={{ cursor: 'pointer', fontSize: 13, color: '#595959' }}>
               {user?.username}
               <span style={{ color: '#bbb', marginLeft: 8, fontSize: 12 }}>
-                {isAdmin() ? '管理员' : '用户'}
+                {isAdmin() ? '???' : '??'}
               </span>
             </span>
           </Dropdown>
