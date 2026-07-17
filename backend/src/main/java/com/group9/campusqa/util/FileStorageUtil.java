@@ -81,15 +81,31 @@ public class FileStorageUtil {
     }
 
     /**
-     * 替换文件：先删除旧文件，再保存新文件。
+     * 替换文件：先保存新文件，成功后再删除旧文件。
+     *
+     * <p>顺序很重要：如果先删旧文件再保存新文件，新文件保存失败时
+     * 旧文件已被删除，造成数据丢失。</p>
+     *
+     * <p>调用方（DocumentService）应在数据库更新失败时
+     * 调用 {@link #deleteFile(String)} 清理刚保存的新文件，回滚到替换前状态。</p>
      *
      * @param oldFilePath 旧文件绝对路径（可能不存在）
      * @param newFile     新上传文件
      * @return 新的 StoredFile
      */
     public StoredFile replace(String oldFilePath, MultipartFile newFile) {
-        deleteFile(oldFilePath);
-        return save(newFile);
+        // 1. 先校验并保存新文件（失败则旧文件不受影响）
+        StoredFile newStored = save(newFile);
+
+        // 2. 新文件保存成功后，再删除旧文件
+        if (oldFilePath != null && !oldFilePath.isBlank()) {
+            // 新旧文件路径相同则跳过删除（幂等替换场景）
+            if (!oldFilePath.equals(newStored.getAbsolutePath())) {
+                deleteFile(oldFilePath);
+            }
+        }
+
+        return newStored;
     }
 
     /**
