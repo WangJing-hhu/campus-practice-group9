@@ -1,50 +1,125 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Card, message, Table, Input, Select, Space, Button, Popconfirm, Tag } from 'antd'
-import { SearchOutlined, ReloadOutlined, DeleteOutlined } from '@ant-design/icons'
+import { Card, message } from 'antd'
 import { useAuthStore } from '../../store/auth'
-import { getDocumentList, deleteDocument, updateDocument } from '../../api/document'
+import {
+  getDocumentList,
+  deleteDocument,
+  updateDocument,
+  getDocumentDetail,
+  previewDocument,
+  downloadDocument,
+} from '../../api/document'
 import { DocumentUpload } from '../../components/document/DocumentUpload'
+import { DocumentToolbar } from '../../components/document/DocumentToolbar'
+import { DocumentTable } from '../../components/document/DocumentTable'
+import { DocumentDetailModal } from '../../components/document/DocumentDetailModal'
+import {
+  DocumentPreviewModal,
+  type PreviewKind,
+} from '../../components/document/DocumentPreviewModal'
 import type {
   DocumentItem,
   DocumentListParams,
   PageResult,
 } from '../../types/document'
+import '../../styles/knowledge-base.css'
 
-// 轮询间隔（毫秒）
 const POLL_INTERVAL = 3000
+
+/** 根据 fileType 判定预览类型 */
+function getPreviewKind(fileType: string): PreviewKind {
+  const lower = fileType.toLowerCase()
+  if (lower === 'pdf') return 'pdf'
+  if (lower === 'txt') return 'txt'
+  return 'unsupported'
+}
 
 /**
  * 知识库管理页面容器
- * 负责：查询条件、分页、刷新、上传后列表更新
- * 孙凤摇的列表/状态/操作组件通过 props 接入
+ *
+ * 搜索/筛选采用两阶段状态：
+ * - Toolbar 管理草稿条件（draftKeyword / draftStatus）
+ * - 本容器只持有"已应用"条件（appliedKeyword / appliedStatus）
+ * - 只有点击搜索/Enter 时才将草稿写入 applied 并请求列表
+ * - 重置清空两组条件并立即加载
  */
 export function KnowledgeBase() {
   const { isAdmin } = useAuthStore()
 
-  // 数据状态
+  // 已应用的条件（实际用于 API 请求）
+  const [appliedKeyword, setAppliedKeyword] = useState('')
+  const [appliedStatus, setAppliedStatus] = useState<string>('')
+
+  // 列表状态
   const [docs, setDocs] = useState<DocumentItem[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
-  const [pageSize] = useState(10)
-  const [keyword, setKeyword] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('')
+  const [pageSize, setPageSize] = useState(10)
   const [loading, setLoading] = useState(false)
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null)
 
+  // 弹窗状态
+  const [selectedDocument, setSelectedDocument] = useState<DocumentItem | null>(null)
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [detailLoading, setDetailLoading] = useState(false)
+
+  // 预览状态
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewLoadingId, setPreviewLoadingId] = useState<number | null>(null)
+  const [previewKind, setPreviewKind] = useState<PreviewKind>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [textContent, setTextContent] = useState<string | null>(null)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+
+  // 下载状态
+  const [downloadLoadingId, setDownloadLoadingId] = useState<number | null>(null)
+
   const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const mounted = useRef(true)
+  const previewBlobUrl = useRef<string | null>(null)
+  const pollErrorCount = useRef(0)
 
-  useEffect(() => {
-    return () => { mounted.current = false }
+  // 详情请求竞态防护：序号 + 当前文档 ID
+  const detailRequestSequenceRef = useRef(0)
+  const activeDetailIdRef = useRef<DocumentItem['id'] | null>(null)
+
+  // 释放 Blob URL
+  const revokePreviewUrl = useCallback(() => {
+    if (previewBlobUrl.current) {
+      URL.revokeObjectURL(previewBlobUrl.current)
+      previewBlobUrl.current = null
+    }
   }, [])
 
+  // 组件卸载时释放 Blob URL、清理轮询、失效未完成详情请求
+  useEffect(() => {
+    return () => {
+      mounted.current = false
+      detailRequestSequenceRef.current += 1
+      revokePreviewUrl()
+      if (pollTimer.current) {
+        clearInterval(pollTimer.current)
+      }
+    }
+  }, [revokePreviewUrl])
+
   // ===== 加载列表 =====
-  const loadList = useCallback(async (p: number, kw: string, st: string) => {
-    setLoading(true)
+  const loadList = useCallback(async (
+    p: number,
+    kw: string,
+    st: string,
+    options?: { silent?: boolean; size?: number },
+  ) => {
+    const silent = options?.silent ?? false
+    const size = options?.size ?? pageSize
+    if (!silent) {
+      setLoading(true)
+    }
     try {
       const params: DocumentListParams = {
         page: p,
-        size: pageSize,
+        size,
         keyword: kw || undefined,
         status: st || undefined,
       }
@@ -53,32 +128,43 @@ export function KnowledgeBase() {
       setDocs(result.records ?? [])
       setTotal(result.total ?? 0)
       setPage(result.current ?? p)
+      pollErrorCount.current = 0
     } catch {
-      // request.ts 拦截器统一提示
+      if (!silent) {
+        // request.ts 拦截器统一提示
+      } else {
+        pollErrorCount.current++
+        if (pollErrorCount.current % 30 === 0) {
+          console.warn('[轮询] 列表刷新失败，将在一段时间后重试')
+        }
+      }
     } finally {
-      if (mounted.current) setLoading(false)
+      if (!silent && mounted.current) {
+        setLoading(false)
+      }
     }
   }, [pageSize])
 
   // ===== 首次加载 =====
   useEffect(() => {
-    loadList(1, keyword, statusFilter)
+    loadList(1, appliedKeyword, appliedStatus)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ===== 状态轮询：有 PENDING/PROCESSING 文档时每 3 秒刷新 =====
+  // ===== 状态轮询（静默，使用已应用条件） =====
   useEffect(() => {
     const hasProcessing = docs.some(
       (d) => d.status === 'PENDING' || d.status === 'PROCESSING',
     )
     if (hasProcessing && !pollTimer.current) {
       pollTimer.current = setInterval(() => {
-        loadList(page, keyword, statusFilter)
+        loadList(page, appliedKeyword, appliedStatus, { silent: true })
       }, POLL_INTERVAL)
     }
     if (!hasProcessing && pollTimer.current) {
       clearInterval(pollTimer.current)
       pollTimer.current = null
+      pollErrorCount.current = 0
     }
     return () => {
       if (pollTimer.current) {
@@ -86,28 +172,34 @@ export function KnowledgeBase() {
         pollTimer.current = null
       }
     }
-  }, [docs, page, keyword, statusFilter, loadList])
+  }, [docs, page, appliedKeyword, appliedStatus, loadList])
 
-  // ===== 搜索 =====
-  const handleSearch = (kw: string) => {
-    setKeyword(kw)
-    loadList(1, kw, statusFilter)
+  // ===== 搜索：Toolbar 点击搜索或按 Enter 时调用 =====
+  const handleSearch = (kw: string, st: string) => {
+    setAppliedKeyword(kw)
+    setAppliedStatus(st)
+    loadList(1, kw, st)
   }
 
-  // ===== 状态筛选 =====
-  const handleStatusFilter = (st: string) => {
-    setStatusFilter(st)
-    loadList(1, keyword, st)
+  // ===== 重置：Toolbar 点击重置时调用 =====
+  const handleReset = () => {
+    setAppliedKeyword('')
+    setAppliedStatus('')
+    loadList(1, '', '')
   }
 
-  // ===== 分页 =====
-  const handlePageChange = (p: number) => {
-    loadList(p, keyword, statusFilter)
+  // ===== 分页（pageSize 变化时 page 回退到 1） =====
+  const handlePaginationChange = (nextPage: number, nextPageSize: number) => {
+    const pageSizeChanged = nextPageSize !== pageSize
+    setPageSize(nextPageSize)
+    const targetPage = pageSizeChanged ? 1 : nextPage
+    setPage(targetPage)
+    loadList(targetPage, appliedKeyword, appliedStatus, { size: nextPageSize })
   }
 
   // ===== 上传成功后刷新 =====
   const handleUploadSuccess = () => {
-    loadList(1, keyword, statusFilter)
+    loadList(1, appliedKeyword, appliedStatus)
   }
 
   // ===== 删除 =====
@@ -116,10 +208,10 @@ export function KnowledgeBase() {
     try {
       await deleteDocument(doc.id)
       message.success('文档已删除')
-      // 当前页最后一条 → 回到上一页
       const remaining = total - 1
-      const newPage = remaining <= (page - 1) * pageSize && page > 1 ? page - 1 : page
-      loadList(newPage, keyword, statusFilter)
+      const newPage =
+        remaining <= (page - 1) * pageSize && page > 1 ? page - 1 : page
+      loadList(newPage, appliedKeyword, appliedStatus)
     } catch {
       // request.ts 统一提示
     } finally {
@@ -133,11 +225,154 @@ export function KnowledgeBase() {
     try {
       await updateDocument(doc.id, {})
       message.success('已开始重新处理')
-      loadList(page, keyword, statusFilter)
+      setDetailOpen(false)
+      setSelectedDocument(null)
+      loadList(page, appliedKeyword, appliedStatus)
     } catch {
       // request.ts 统一提示
     } finally {
       if (mounted.current) setActionLoadingId(null)
+    }
+  }
+
+  // ===== 打开详情（防竞态：请求序号 + 活动文档 ID 双重校验） =====
+  const handleOpenDetail = async (doc: DocumentItem) => {
+    const requestSequence = ++detailRequestSequenceRef.current
+    activeDetailIdRef.current = doc.id
+
+    setSelectedDocument(doc)
+    setDetailOpen(true)
+    setDetailLoading(true)
+
+    try {
+      const detail = await getDocumentDetail(doc.id)
+
+      if (
+        requestSequence !== detailRequestSequenceRef.current ||
+        activeDetailIdRef.current !== doc.id
+      ) {
+        return
+      }
+
+      if (mounted.current) setSelectedDocument(detail)
+    } catch {
+      if (
+        requestSequence !== detailRequestSequenceRef.current ||
+        activeDetailIdRef.current !== doc.id
+      ) {
+        return
+      }
+      // request.ts 统一提示
+    } finally {
+      if (
+        requestSequence === detailRequestSequenceRef.current &&
+        activeDetailIdRef.current === doc.id &&
+        mounted.current
+      ) {
+        setDetailLoading(false)
+      }
+    }
+  }
+
+  // ===== 关闭详情（递增序号使所有未完成请求失效） =====
+  const handleCloseDetail = () => {
+    detailRequestSequenceRef.current += 1
+    activeDetailIdRef.current = null
+    setDetailOpen(false)
+    setSelectedDocument(null)
+    setDetailLoading(false)
+  }
+
+  // ===== 详情弹窗打开期间，同步 selectedDocument 到最新列表数据 =====
+  // 轮询静默更新 docs 后，弹窗中的 Steps/状态也随之更新
+  useEffect(() => {
+    if (!detailOpen || !selectedDocument) return
+    const latest = docs.find((d) => d.id === selectedDocument.id)
+    if (latest) {
+      // shallow compare to avoid unnecessary re-render
+      if (
+        latest.status !== selectedDocument.status ||
+        latest.processStage !== selectedDocument.processStage ||
+        latest.chunkCount !== selectedDocument.chunkCount ||
+        latest.errorMessage !== selectedDocument.errorMessage
+      ) {
+        setSelectedDocument(latest)
+      }
+    }
+  }, [docs, detailOpen, selectedDocument])
+
+  // ===== 打开预览 =====
+  const handleOpenPreview = async (doc: DocumentItem) => {
+    const kind = getPreviewKind(doc.fileType)
+
+    // 释放之前的 Blob URL
+    revokePreviewUrl()
+
+    setSelectedDocument(doc)
+    setPreviewOpen(true)
+    setPreviewKind(kind)
+    setPreviewUrl(null)
+    setTextContent(null)
+    setPreviewError(null)
+
+    // DOC/DOCX 不请求在线预览
+    if (kind === 'unsupported') return
+
+    // PDF / TXT 请求预览
+    setPreviewLoading(true)
+    setPreviewLoadingId(doc.id)
+    try {
+      const { blob } = await previewDocument(doc.id)
+      if (!mounted.current) return
+
+      if (kind === 'pdf') {
+        const url = URL.createObjectURL(blob)
+        previewBlobUrl.current = url
+        setPreviewUrl(url)
+      } else if (kind === 'txt') {
+        // 强制使用 UTF-8 解码，避免依赖不完整的响应头 charset
+        const buffer = await blob.arrayBuffer()
+        const text = new TextDecoder('utf-8').decode(buffer)
+        setTextContent(text)
+      }
+    } catch (err: unknown) {
+      if (mounted.current) {
+        const msg = err instanceof Error ? err.message : '预览加载失败'
+        setPreviewError(msg)
+      }
+    } finally {
+      if (mounted.current) {
+        setPreviewLoading(false)
+        setPreviewLoadingId(null)
+      }
+    }
+  }
+
+  // ===== 关闭预览 =====
+  const handleClosePreview = () => {
+    setPreviewOpen(false)
+    setSelectedDocument(null)
+    setPreviewKind(null)
+    setPreviewUrl(null)
+    setTextContent(null)
+    setPreviewError(null)
+    setPreviewLoading(false)
+    setPreviewLoadingId(null)
+    revokePreviewUrl()
+  }
+
+  // ===== 下载文档 =====
+  const handleDownload = async (doc: DocumentItem) => {
+    setDownloadLoadingId(doc.id)
+    try {
+      await downloadDocument(doc.id)
+    } catch (err: unknown) {
+      if (mounted.current) {
+        const msg = err instanceof Error ? err.message : '下载失败'
+        message.error(msg)
+      }
+    } finally {
+      if (mounted.current) setDownloadLoadingId(null)
     }
   }
 
@@ -151,112 +386,61 @@ export function KnowledgeBase() {
     )
   }
 
-  // ===== 列定义（孙凤摇替换为正式组件后移除） =====
-  const columns = [
-    { title: 'ID', dataIndex: 'id', width: 60 },
-    { title: '文档名', dataIndex: 'title', ellipsis: true },
-    {
-      title: '类型', dataIndex: 'fileType', width: 70,
-      render: (t: string) => <Tag>{t?.toUpperCase()}</Tag>,
-    },
-    {
-      title: '大小', dataIndex: 'fileSize', width: 90,
-      render: (s: number) => s ? `${(s / 1024).toFixed(0)} KB` : '-',
-    },
-    { title: '块数', dataIndex: 'chunkCount', width: 60 },
-    {
-      title: '状态', dataIndex: 'status', width: 100,
-      render: (s: string) => {
-        const color =
-          s === 'COMPLETED' ? 'green' : s === 'FAILED' ? 'red' : s === 'PROCESSING' ? 'blue' : 'default'
-        return <Tag color={color}>{s}</Tag>
-      },
-    },
-    {
-      title: '上传时间', dataIndex: 'createTime', width: 170,
-      render: (t: string) => t ? new Date(t).toLocaleString('zh-CN') : '-',
-    },
-    {
-      title: '操作', width: 180,
-      render: (_: unknown, record: DocumentItem) => (
-        <Space>
-          <Button
-            size="small"
-            icon={<ReloadOutlined />}
-            loading={actionLoadingId === record.id}
-            disabled={record.status === 'PROCESSING' || record.status === 'PENDING'}
-            onClick={() => handleReprocess(record)}
-          >
-            重处理
-          </Button>
-          <Popconfirm
-            title="确定删除此文档？"
-            onConfirm={() => handleDelete(record)}
-          >
-            <Button
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-              loading={actionLoadingId === record.id}
-              disabled={record.status === 'PROCESSING' || record.status === 'PENDING'}
-            >
-              删除
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
-  ]
-
   return (
-    <div>
-      <DocumentUpload onSuccess={handleUploadSuccess} />
+    <div className="kb-page">
+      <div className="kb-section">
+        <DocumentUpload onSuccess={handleUploadSuccess} />
+      </div>
 
-      <Card
-        title="文档列表"
-        extra={
-          <Space>
-            <Select
-              allowClear
-              placeholder="状态筛选"
-              style={{ width: 130 }}
-              value={statusFilter || undefined}
-              onChange={(v) => handleStatusFilter(v ?? '')}
-              options={[
-                { label: '待处理', value: 'PENDING' },
-                { label: '处理中', value: 'PROCESSING' },
-                { label: '已完成', value: 'COMPLETED' },
-                { label: '失败', value: 'FAILED' },
-              ]}
-            />
-            <Input
-              placeholder="搜索文档名"
-              prefix={<SearchOutlined />}
-              style={{ width: 200 }}
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              onPressEnter={() => handleSearch(keyword)}
-              allowClear
-            />
-          </Space>
-        }
-      >
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={docs}
+      <Card className="kb-section">
+        <DocumentToolbar
           loading={loading}
-          pagination={{
-            current: page,
-            pageSize,
-            total,
-            showSizeChanger: false,
-            showTotal: (t) => `共 ${t} 篇`,
-            onChange: handlePageChange,
-          }}
-          locale={{ emptyText: '暂无文档，请上传' }}
+          onSearch={handleSearch}
+          onReset={handleReset}
         />
       </Card>
+
+      <Card className="kb-section" title="文档列表">
+        <DocumentTable
+          data={docs}
+          loading={loading}
+          pagination={{ current: page, pageSize, total }}
+          actionLoadingId={actionLoadingId}
+          previewLoadingId={previewLoadingId}
+          downloadLoadingId={downloadLoadingId}
+          onPaginationChange={handlePaginationChange}
+          onDetail={handleOpenDetail}
+          onPreview={handleOpenPreview}
+          onDownload={handleDownload}
+          onReprocess={handleReprocess}
+          onDelete={handleDelete}
+        />
+      </Card>
+
+      <DocumentDetailModal
+        open={detailOpen}
+        document={selectedDocument}
+        loading={detailLoading}
+        onClose={handleCloseDetail}
+        onPreview={(doc) => {
+          handleCloseDetail()
+          handleOpenPreview(doc)
+        }}
+        onReprocess={handleReprocess}
+      />
+
+      <DocumentPreviewModal
+        open={previewOpen}
+        document={selectedDocument}
+        loading={previewLoading}
+        previewKind={previewKind}
+        previewUrl={previewUrl}
+        textContent={textContent}
+        errorMessage={previewError}
+        onClose={handleClosePreview}
+        onDownload={handleDownload}
+        downloadLoading={downloadLoadingId === selectedDocument?.id}
+      />
     </div>
   )
 }
