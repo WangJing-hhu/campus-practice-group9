@@ -33,8 +33,15 @@ public class PromptBuilder {
     /** 上下文 token 上限（约 6000 tokens，中文约 1.5 字/token） */
     private static final int MAX_CONTEXT_CHARS = 9000;
 
-    /** 无资料时的固定回答 */
-    public static final String NO_DATA_ANSWER = "根据现有资料，暂未找到相关信息";
+    /**
+     * 判断检索结果是否有效。
+     * <p><b>⚠️ 调用方必须使用此方法：返回 false 时不得调用 LLM，
+     * 应直接返回 {@link LlmClient#NO_DATA_ANSWER}。</b>
+     * PromptBuilder 内的拒答提示不能替代此规则。</p>
+     */
+    public boolean hasValidSources(List<SearchResult> results) {
+        return results != null && !results.isEmpty();
+    }
 
     private final String systemPrompt;
     private final String noSourcesInstruction;
@@ -141,13 +148,6 @@ public class PromptBuilder {
 
     private String safeStr(String s) {
         return s == null ? "" : s.trim();
-    }
-
-    /**
-     * 判断是否有有效来源。
-     */
-    public boolean hasSources(List<SearchResult> results) {
-        return results != null && !results.isEmpty();
     }
 
     // ── 内部类 ──────────────────────────────────────────
