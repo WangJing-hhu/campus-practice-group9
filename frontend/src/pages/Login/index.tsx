@@ -42,8 +42,7 @@ export function LoginPage() {
 
       {/* 左上角校徽 */}
       <div className="auth-emblem-top">
-        <img src="/images/logo.svg" alt="河海大学" />
-        <span className="emblem-text">HOHAI UNIVERSITY</span>
+        <img src="/images/logo.png" alt="河海大学" />
       </div>
 
       {/* 右侧：品牌文字 + 登录卡片 */}
@@ -52,10 +51,9 @@ export function LoginPage() {
           <h1>校园问答助手</h1>
           <div className="hero-subtitle">知识管理与智能问答平台</div>
           <div className="hero-motto">
-            艰苦朴素 · 实事求是
-            <br />
-            严格要求 · 勇于探索
+            <img src="/images/xiaox.svg" alt="艰苦朴素 实事求是 严格要求 勇于探索" />
           </div>
+          <img src="/images/runzx.svg" alt="" className="hero-decor" />
         </div>
 
         <div className="auth-card">

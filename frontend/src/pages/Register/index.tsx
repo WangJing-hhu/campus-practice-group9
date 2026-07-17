@@ -36,8 +36,7 @@ export function RegisterPage() {
 
       {/* 左上角校徽 */}
       <div className="auth-emblem-top">
-        <img src="/images/logo.svg" alt="河海大学" />
-        <span className="emblem-text">HOHAI UNIVERSITY</span>
+        <img src="/images/logo.png" alt="河海大学" />
       </div>
 
       {/* 右侧：品牌文字 + 注册卡片 */}
@@ -46,10 +45,9 @@ export function RegisterPage() {
           <h1>校园问答助手</h1>
           <div className="hero-subtitle">创建账号，开启校园知识服务</div>
           <div className="hero-motto">
-            艰苦朴素 · 实事求是
-            <br />
-            严格要求 · 勇于探索
+            <img src="/images/xiaox.svg" alt="校训" />
           </div>
+          <img src="/images/runzx.svg" alt="" className="hero-decor" />
         </div>
 
         <div className="auth-card">
