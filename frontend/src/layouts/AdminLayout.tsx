@@ -32,7 +32,7 @@ export function AdminLayout() {
 
   const menuItems: MenuProps['items'] = [
     { key: '/admin', icon: <DashboardOutlined />, label: '工作台' },
-    { key: '/admin/chat', icon: <MessageOutlined />, label: '智能问答' },
+    { key: '/chat', icon: <MessageOutlined />, label: '智能问答' },
     ...(isAdmin()
       ? [
           { key: '/admin/users', icon: <TeamOutlined />, label: '用户管理' },
@@ -41,12 +41,12 @@ export function AdminLayout() {
       : []),
   ]
 
-  const selectedKey = location.pathname.startsWith('/admin/knowledge')
-    ? '/admin/knowledge'
-    : location.pathname.startsWith('/admin/users')
-      ? '/admin/users'
-      : location.pathname.startsWith('/admin/chat')
-        ? '/admin/chat'
+  const selectedKey = location.pathname.startsWith('/chat')
+    ? '/chat'
+    : location.pathname.startsWith('/admin/knowledge')
+      ? '/admin/knowledge'
+      : location.pathname.startsWith('/admin/users')
+        ? '/admin/users'
         : '/admin'
 
   return (

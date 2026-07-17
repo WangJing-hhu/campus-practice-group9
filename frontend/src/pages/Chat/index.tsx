@@ -11,7 +11,6 @@ import {
 import { useChatStream } from '../../hooks/useChatStream'
 import type {
   Conversation,
-  ChatRecord,
   ChatSource,
   StreamMeta,
 } from '../../types/chat'
@@ -86,12 +85,16 @@ export function ChatPage() {
     try {
       const detail = await getConversationDetail(id)
       if (!mounted.current) return
-      const msgs: MessageItem[] = (detail.records || []).map((r: ChatRecord) => ({
-        role: r.question ? 'user' : 'assistant',
-        content: r.question || r.answer || '',
-        sources: r.sourceDocs || [],
-        recordId: r.id,
-      }))
+      // 每条 ChatRecord 展开为 用户问题 + 助手回答 两条消息
+      const msgs: MessageItem[] = []
+      for (const r of (detail.records || [])) {
+        if (r.question) {
+          msgs.push({ role: 'user', content: r.question, recordId: r.id })
+        }
+        if (r.answer) {
+          msgs.push({ role: 'assistant', content: r.answer, sources: r.sourceDocs || [], recordId: r.id })
+        }
+      }
       setMessages(msgs)
       setActiveConversationId(id)
       currentConversationId.current = id
@@ -155,17 +158,17 @@ export function ChatPage() {
           fullAnswer += text
           setStreamingText(fullAnswer)
         },
-        onDone: () => {
+        onDone: (recordId: number) => {
           if (!mounted.current) return
           setSending(false)
-          // 添加助手消息
+          // 添加助手消息，保存后端返回的 recordId
           setMessages((prev) => [
             ...prev,
             {
               role: 'assistant',
               content: fullAnswer,
               sources,
-              recordId: undefined,
+              recordId,
             },
           ])
           setStreamingText('')

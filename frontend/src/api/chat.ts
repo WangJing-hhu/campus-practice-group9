@@ -30,7 +30,7 @@ export function sendChatStream(
     },
     body: JSON.stringify({
       question: data.question,
-      conversation_id: data.conversationId,   // ← 后端用 snake_case
+      conversationId: data.conversationId,
     }),
     signal,
   })

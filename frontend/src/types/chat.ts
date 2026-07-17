@@ -9,6 +9,12 @@ export interface ChatSource {
   fileName: string
   score: number
   content: string
+  sourceUrl?: string
+  sourceDomain?: string
+  category?: string
+  sourceUpdatedAt?: string
+  reviewStatus?: string
+  validityStatus?: string
 }
 
 /** 一条问答记录 */

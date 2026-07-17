@@ -51,10 +51,19 @@ export function AppRouter() {
           }
         />
         <Route path="users" element={<UserManagement />} />
-        {/* 知识库管理：杨牧涵容器 + 孙凤摇列表组件 */}
         <Route path="knowledge" element={<KnowledgeBase />} />
-        {/* 智能问答：所有登录用户可访问 */}
-        <Route path="chat" element={<ChatPage />} />
+      </Route>
+
+      {/* 智能问答：所有登录用户可访问 */}
+      <Route
+        path="/chat"
+        element={
+          <ProtectedRoute>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<ChatPage />} />
       </Route>
 
       {/* 兜底：所有不认识的路径 → 重定向到 /admin */}

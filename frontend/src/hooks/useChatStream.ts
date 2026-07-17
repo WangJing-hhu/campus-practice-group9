@@ -44,15 +44,19 @@ export function useChatStream() {
         const decoder = new TextDecoder('utf-8')
         let buffer = ''
 
+        let streamEndedCleanly = false
+
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
 
-          buffer += decoder.decode(value, { stream: true })
+          // \r\n → \n 统一换行符
+          const chunk = decoder.decode(value, { stream: true }).replace(/\r\n/g, '\n')
+          buffer += chunk
 
           // 按空行切帧（SSE 帧以 \n\n 分隔）
           const frames = buffer.split('\n\n')
-          buffer = frames.pop() || ''   // 最后一个可能不完整，留到下次拼接
+          buffer = frames.pop() || ''
 
           for (const frame of frames) {
             if (!frame.trim()) continue
@@ -82,11 +86,15 @@ export function useChatStream() {
                   callbacks.onToken?.(data.text || '')
                   break
                 case 'done':
+                  streamEndedCleanly = true
                   callbacks.onDone?.(data.recordId)
                   break
                 case 'error':
+                  streamEndedCleanly = true
                   callbacks.onError?.(data.message || '服务器错误')
-                  break
+                  // 收到 error 后停止读取
+                  reader.cancel()
+                  return
               }
             } catch {
               // JSON 解析失败，跳过此帧
@@ -94,17 +102,9 @@ export function useChatStream() {
           }
         }
 
-        // 处理缓冲区剩余内容
-        if (buffer.trim()) {
-          const lines = buffer.split('\n')
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6))
-                if (data.text) callbacks.onToken?.(data.text)
-              } catch { /* ignore */ }
-            }
-          }
+        // 连接结束但没有 done/error → 中断
+        if (!streamEndedCleanly) {
+          callbacks.onError?.('连接中断')
         }
       } catch (err: unknown) {
         if (err instanceof DOMException && err.name === 'AbortError') {
