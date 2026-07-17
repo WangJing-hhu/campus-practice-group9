@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS qa_record (
     question          TEXT         NOT NULL COMMENT '用户问题',
     answer            MEDIUMTEXT   NULL COMMENT '助手回答',
     source_docs       JSON         NULL COMMENT '检索来源文档（JSON数组）',
-    status            VARCHAR(20)  NOT NULL DEFAULT 'PENDING' COMMENT '状态: PENDING / PROCESSING / COMPLETED / FAILED / INTERRUPTED',
+    status            VARCHAR(20)  NOT NULL DEFAULT 'PENDING' COMMENT '状态: PENDING / COMPLETED / FAILED / INTERRUPTED',
     model             VARCHAR(50)  NULL COMMENT '使用的LLM模型',
     top_k             INT          NOT NULL DEFAULT 5 COMMENT '检索TopK',
     score_threshold   DOUBLE       NOT NULL DEFAULT 0.70 COMMENT '检索阈值',

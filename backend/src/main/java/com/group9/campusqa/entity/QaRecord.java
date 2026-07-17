@@ -37,7 +37,7 @@ public class QaRecord {
     /** 检索来源文档（JSON 字符串） */
     private String sourceDocs;
 
-    /** 状态：PENDING / PROCESSING / COMPLETED / FAILED / INTERRUPTED */
+    /** 状态：PENDING / COMPLETED / FAILED / INTERRUPTED */
     private String status;
 
     /** 使用的 LLM 模型 */

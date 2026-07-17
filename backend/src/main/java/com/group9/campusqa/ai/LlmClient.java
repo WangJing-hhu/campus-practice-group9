@@ -4,23 +4,24 @@ import com.group9.campusqa.ai.PromptBuilder.PromptMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 /**
  * LLM 客户端——通过 WebClient 调用 DashScope OpenAI 兼容接口。
  *
- * <p>同时支持同步和流式调用。所有配置均可通过 application.yml
- * 或环境变量覆盖。错误统一转换为可读异常，禁止把 API Key
- * 或原始响应堆栈返回前端。</p>
+ * <p>同时支持同步和流式调用。流式使用 {@link ServerSentEvent} 正式解析
+ * SSE 帧，避免 {@code bodyToFlux(String.class)} 丢失 {@code data:} 前缀。</p>
  *
  * <p>DashScope OpenAI 兼容端点：
  * POST https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions</p>
@@ -35,6 +36,9 @@ public class LlmClient {
     private final double temperature;
     private final int maxTokens;
     private final Duration timeout;
+
+    /** 拒答固定文本 */
+    public static final String NO_DATA_ANSWER = "根据现有资料，暂未找到相关信息";
 
     public LlmClient(
             @Value("${campus-qa.llm.base-url:https://dashscope.aliyuncs.com/compatible-mode/v1}") String baseUrl,
@@ -60,6 +64,8 @@ public class LlmClient {
                 baseUrl, model, temperature, maxTokens, responseTimeout);
     }
 
+    // ── 同步调用 ──────────────────────────────────────────
+
     /**
      * 同步调用 LLM，返回完整回答文本。
      *
@@ -78,7 +84,8 @@ public class LlmClient {
                     .retrieve()
                     .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
                             clientResponse -> clientResponse.bodyToMono(String.class)
-                                    .map(msg -> new LlmException("LLM 调用失败 (HTTP " + clientResponse.statusCode().value() + ")", msg)))
+                                    .map(msg -> new LlmException(
+                                            "LLM 调用失败 (HTTP " + clientResponse.statusCode().value() + ")", msg)))
                     .bodyToMono(Map.class)
                     .timeout(timeout)
                     .block();
@@ -103,66 +110,80 @@ public class LlmClient {
         }
     }
 
+    // ── 流式调用 ──────────────────────────────────────────
+
     /**
-     * 流式调用 LLM，每个 token 通过 onToken 回调通知调用方。
+     * 流式调用 LLM 结果。
      *
-     * <p>返回完整文本，同时每个增量 token 实时回调 onToken。
-     * 杨熙杰的 RagService 通过此方法实现 SSE 推送。</p>
+     * <p>{@code interrupted=true} 表示用户主动中断（应标记 INTERRUPTED），
+     * {@code interrupted=false} 表示自然结束（应标记 COMPLETED）。</p>
+     */
+    public static class StreamResult {
+        private final String text;
+        private final boolean interrupted;
+
+        public StreamResult(String text, boolean interrupted) {
+            this.text = text;
+            this.interrupted = interrupted;
+        }
+
+        public String getText() { return text; }
+        public boolean isInterrupted() { return interrupted; }
+    }
+
+    /**
+     * 流式调用 LLM，使用 {@link ServerSentEvent} 正式解析 SSE，
+     * 每个 token 通过 onToken 回调通知调用方。
      *
      * @param messages    Prompt 消息列表
-     * @param onToken     token 回调（可能在多个线程调用）
-     * @param onDone      流结束回调
+     * @param onToken     token 回调
      * @param onInterrupt 中断检查（返回 true 时停止读取）
-     * @return 完整回答文本
+     * @return StreamResult（完整文本 + 是否被中断）
      * @throws LlmException 调用失败时抛出
      */
-    public String chatStream(List<PromptMessage> messages,
-                             Consumer<String> onToken,
-                             Runnable onDone,
-                             java.util.function.BooleanSupplier onInterrupt) {
+    public StreamResult chatStream(List<PromptMessage> messages,
+                                   Consumer<String> onToken,
+                                   java.util.function.BooleanSupplier onInterrupt) {
         log.debug("流式 LLM 调用: model={}, messages={}", model, messages.size());
         Map<String, Object> body = buildRequestBody(messages, true);
 
-        try {
-            StringBuilder fullAnswer = new StringBuilder();
+        StringBuilder fullAnswer = new StringBuilder();
+        AtomicBoolean interrupted = new AtomicBoolean(false);
 
-            String result = llmWebClient.post()
+        try {
+            llmWebClient.post()
                     .uri("/chat/completions")
                     .bodyValue(body)
                     .accept(MediaType.TEXT_EVENT_STREAM)
                     .retrieve()
                     .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
                             clientResponse -> clientResponse.bodyToMono(String.class)
-                                    .map(msg -> new LlmException("LLM 流式调用失败 (HTTP " + clientResponse.statusCode().value() + ")", msg)))
-                    .bodyToFlux(String.class)
+                                    .map(msg -> new LlmException(
+                                            "LLM 流式调用失败 (HTTP " + clientResponse.statusCode().value() + ")", msg)))
+                    .bodyToFlux(new ParameterizedTypeReference<ServerSentEvent<String>>() {})
                     .timeout(timeout)
-                    .takeUntil(line -> onInterrupt != null && onInterrupt.getAsBoolean())
-                    .doOnNext(line -> {
-                        if (line == null || line.isBlank() || "[DONE]".equals(line.trim())) {
+                    .takeUntil(event -> {
+                        if (onInterrupt != null && onInterrupt.getAsBoolean()) {
+                            interrupted.set(true);
+                            return true;
+                        }
+                        return false;
+                    })
+                    .doOnNext(event -> {
+                        String data = event.data();
+                        if (data == null || "[DONE]".equals(data.trim())) {
                             return;
                         }
-                        // SSE 格式: "data: {...}"
-                        if (line.startsWith("data: ")) {
-                            String json = line.substring(6).trim();
-                            if ("[DONE]".equals(json)) {
-                                return;
-                            }
-                            String token = extractStreamToken(json);
-                            if (token != null && !token.isEmpty()) {
-                                fullAnswer.append(token);
-                                onToken.accept(token);
-                            }
+                        String token = extractStreamToken(data);
+                        if (token != null && !token.isEmpty()) {
+                            fullAnswer.append(token);
+                            onToken.accept(token);
                         }
                     })
-                    .doOnComplete(() -> {
-                        onDone.run();
-                        log.debug("LLM 流式完成: totalLength={}", fullAnswer.length());
-                    })
+                    .doOnComplete(() -> log.debug("LLM 流式结束: interrupted={}, totalLength={}",
+                            interrupted.get(), fullAnswer.length()))
                     .doOnError(e -> log.error("LLM 流式异常", e))
-                    .then(Mono.just(fullAnswer.toString()))
-                    .block();
-
-            return result;
+                    .blockLast();
 
         } catch (LlmException e) {
             throw e;
@@ -174,13 +195,12 @@ public class LlmClient {
             }
             throw new LlmException("大模型服务暂时不可用，请稍后重试", null);
         }
+
+        return new StreamResult(fullAnswer.toString(), interrupted.get());
     }
 
     // ── 内部方法 ──────────────────────────────────────────
 
-    /**
-     * 构建请求体。
-     */
     private Map<String, Object> buildRequestBody(List<PromptMessage> messages, boolean stream) {
         return Map.of(
                 "model", model,
@@ -191,9 +211,6 @@ public class LlmClient {
         );
     }
 
-    /**
-     * 从同步响应中提取 content。
-     */
     @SuppressWarnings("unchecked")
     private String extractContent(Map<String, Object> response) {
         try {
@@ -210,14 +227,9 @@ public class LlmClient {
         return "";
     }
 
-    /**
-     * 从流式 chunk 中提取增量 token。
-     */
     @SuppressWarnings("unchecked")
     private String extractStreamToken(String json) {
         try {
-            // 简单 JSON 解析，避免额外依赖
-            // 格式: {"choices":[{"delta":{"content":"..."}}]}
             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
             Map<String, Object> chunk = mapper.readValue(json, Map.class);
             List<Map<String, Object>> choices = (List<Map<String, Object>>) chunk.get("choices");
@@ -242,12 +254,12 @@ public class LlmClient {
      * LLM 调用异常——仅暴露可读信息给上层。
      */
     public static class LlmException extends RuntimeException {
+        private final String detail;
+
         public LlmException(String message, String detail) {
             super(message);
             this.detail = detail;
         }
-
-        private final String detail;
 
         public String getDetail() { return detail; }
     }

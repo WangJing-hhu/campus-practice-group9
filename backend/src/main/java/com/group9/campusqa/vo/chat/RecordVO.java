@@ -15,7 +15,8 @@ public class RecordVO {
     private Long conversationId;
     private String question;
     private String answer;
-    private List<SourceVO> sources;
+    /** 检索来源文档列表（字段名 sourceDocs 与前端 PR #23 一致） */
+    private List<SourceVO> sourceDocs;
     private String status;
     private String model;
     private Integer latencyMs;
@@ -36,8 +37,8 @@ public class RecordVO {
     public String getAnswer() { return answer; }
     public void setAnswer(String answer) { this.answer = answer; }
 
-    public List<SourceVO> getSources() { return sources; }
-    public void setSources(List<SourceVO> sources) { this.sources = sources; }
+    public List<SourceVO> getSourceDocs() { return sourceDocs; }
+    public void setSourceDocs(List<SourceVO> sourceDocs) { this.sourceDocs = sourceDocs; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

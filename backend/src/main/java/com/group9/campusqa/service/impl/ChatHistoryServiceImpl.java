@@ -156,8 +156,9 @@ public class ChatHistoryServiceImpl
         wrapper.eq(QaRecord::getConversationId, conversationId);
         wrapper.eq(QaRecord::getUserId, userId);
         wrapper.eq(QaRecord::getStatus, "COMPLETED");
+        // 每条 QaRecord 已同时包含 question 和 answer，limit 条记录 = limit 轮
         wrapper.orderByDesc(QaRecord::getCreateTime);
-        wrapper.last("LIMIT " + (limit * 2)); // 每轮一问一答，取 limit*2 条
+        wrapper.last("LIMIT " + limit);
 
         List<QaRecord> records = recordMapper.selectList(wrapper);
         // 按时间升序排列（最早在前）
@@ -224,6 +225,12 @@ public class ChatHistoryServiceImpl
         vo.setCreateTime(conv.getCreateTime());
         vo.setUpdateTime(conv.getUpdateTime());
 
+        // 统计记录数
+        Long recordCount = recordMapper.selectCount(
+                new LambdaQueryWrapper<QaRecord>()
+                        .eq(QaRecord::getConversationId, conv.getId()));
+        vo.setRecordCount(recordCount.intValue());
+
         // 获取最近一条记录的时间
         LambdaQueryWrapper<QaRecord> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(QaRecord::getConversationId, conv.getId());
@@ -241,7 +248,7 @@ public class ChatHistoryServiceImpl
         vo.setConversationId(record.getConversationId());
         vo.setQuestion(record.getQuestion());
         vo.setAnswer(record.getAnswer());
-        vo.setSources(parseSources(record.getSourceDocs()));
+        vo.setSourceDocs(parseSources(record.getSourceDocs()));
         vo.setStatus(record.getStatus());
         vo.setModel(record.getModel());
         vo.setLatencyMs(record.getLatencyMs());

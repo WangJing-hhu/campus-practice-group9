@@ -34,9 +34,17 @@ public class SourceVO {
     // ── Day5 官网来源字段（可选，普通文档为 null） ──────
     private String sourceUrl;
     private String sourceSite;
+    private String sourceDomain;
     private String category;
     private String publishedAt;
     private String crawledAt;
+    private String sourceUpdatedAt;
+
+    /** 审核状态：PENDING / APPROVED / REJECTED / NEEDS_EDIT */
+    private String reviewStatus;
+
+    /** 时效状态：VALID / OUTDATED / UNKNOWN */
+    private String validityStatus;
 
     // ── Getter / Setter ──────────────────────────────────
 
@@ -72,4 +80,16 @@ public class SourceVO {
 
     public String getCrawledAt() { return crawledAt; }
     public void setCrawledAt(String crawledAt) { this.crawledAt = crawledAt; }
+
+    public String getSourceDomain() { return sourceDomain; }
+    public void setSourceDomain(String sourceDomain) { this.sourceDomain = sourceDomain; }
+
+    public String getSourceUpdatedAt() { return sourceUpdatedAt; }
+    public void setSourceUpdatedAt(String sourceUpdatedAt) { this.sourceUpdatedAt = sourceUpdatedAt; }
+
+    public String getReviewStatus() { return reviewStatus; }
+    public void setReviewStatus(String reviewStatus) { this.reviewStatus = reviewStatus; }
+
+    public String getValidityStatus() { return validityStatus; }
+    public void setValidityStatus(String validityStatus) { this.validityStatus = validityStatus; }
 }
