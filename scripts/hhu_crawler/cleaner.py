@@ -41,6 +41,9 @@ REMOVE_CLASS_PATTERNS = [
 
 def should_remove(element) -> bool:
     """判断元素是否应被移除（基于 tag / class / id）。"""
+    # 跳过 NavigableString 等非 Tag 节点
+    if not hasattr(element, 'name') or element.name is None:
+        return False
     if element.name in REMOVE_TAGS:
         return True
     if element.name == "a":
@@ -57,19 +60,41 @@ def should_remove(element) -> bool:
 
 
 def extract_main_content(html: str) -> str:
-    """从 HTML 中提取正文内容。"""
+    """从 HTML 中提取正文内容——激进模式，最大化文本提取。"""
     soup = BeautifulSoup(html, "lxml")
 
-    # 移除无用标签
+    # 1. 提取 meta description
+    meta_lines = []
+    for meta in soup.find_all("meta"):
+        name = (meta.get("name") or "").lower()
+        prop = (meta.get("property") or "").lower()
+        if name in ("description", "keywords") or prop in ("og:description", "og:title"):
+            content = meta.get("content", "").strip()
+            if content and len(content) > 10:
+                meta_lines.append(content)
+
+    # 2. 提取 title
+    title = ""
+    if soup.title and soup.title.string:
+        title = soup.title.string.strip()
+
+    # 3. 移除无用标签
     for tag in soup.find_all(True):
+        if not hasattr(tag, 'name') or tag.name is None:
+            continue
+        if tag.name in REMOVE_TAGS:
+            tag.decompose()
+            continue
         if should_remove(tag):
             tag.decompose()
+            continue
 
-    # 尝试定位主内容区
+    # 4. 尝试定位主内容区
     main_selectors = [
         {"id": "content"}, {"id": "main"}, {"id": "article"},
         {"class_": "content"}, {"class_": "main-content"},
         {"class_": "article-content"}, {"class_": "entry-content"},
+        {"class_": "wp-container"}, {"class_": "container"},
         {"role": "main"},
     ]
     main = None
@@ -82,34 +107,59 @@ def extract_main_content(html: str) -> str:
     if target is None:
         return ""
 
-    # 提取文本行
+    # 5. 提取所有文本承载元素
     lines = []
     seen = set()
 
+    # 文本承载标签
+    TEXT_TAGS = {"p", "h1", "h2", "h3", "h4", "h5", "h6", "li", "td", "th", "dd", "dt",
+                 "div", "span", "a", "strong", "em", "b", "label", "figcaption", "blockquote",
+                 "pre", "code", "summary", "details", "article", "section", "aside"}
+
     for elem in target.descendants:
-        if elem.name in ("h1", "h2", "h3", "h4"):
+        if not hasattr(elem, 'name') or elem.name is None:
+            continue
+        if elem.name not in TEXT_TAGS:
+            continue
+        # 跳过子元素已被处理的情况（div/span/article/section 只取直接文本）
+        if elem.name in ("div", "span", "article", "section", "aside"):
+            # 只取直接文本子节点
+            direct_text = "".join(
+                c.strip() for c in elem.children
+                if hasattr(c, 'name') and c.name is None and isinstance(c.string, str)
+            )
+            text = direct_text.strip()
+        else:
             text = elem.get_text(strip=True)
-            if text and len(text) > 2:
-                lines.append(f"\n## {text}\n")
-        elif elem.name == "p":
-            text = elem.get_text(strip=True)
-            if text:
-                lines.append(text)
-        elif elem.name is None:  # 裸文本节点
-            text = elem.string
-            if text:
-                text = text.strip()
-                if text and len(text) > 20:  # 过滤短片段
-                    lines.append(text)
 
-    # 去重连续重复行
-    deduped = []
-    for line in lines:
-        if line not in seen:
-            deduped.append(line)
-            seen.add(line)
+        if not text:
+            continue
+        # 去重并过滤
+        if len(text) < 4:
+            continue
+        # 对于 a 标签，过滤长链接文本
+        if elem.name == "a" and len(text) > 200:
+            continue
+        # 对于 li/td/th/dd/dt，去掉明显是导航的
+        if text in seen:
+            continue
+        seen.add(text)
 
-    return "\n\n".join(deduped)
+        if elem.name.startswith("h") and elem.name[1:].isdigit():
+            lines.append(f"\n## {text}\n")
+        else:
+            lines.append(text)
+
+    # 6. 组装结果
+    result_parts = []
+    if title:
+        result_parts.append(f"# {title}\n")
+    if meta_lines:
+        result_parts.append("\n".join(meta_lines))
+    result_parts.append("\n\n".join(lines))
+    return "\n\n".join(result_parts)
+
+    return "\n\n".join(lines)
 
 
 def clean_text(text: str) -> str:
