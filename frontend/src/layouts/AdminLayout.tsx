@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Layout, Menu, Button, Dropdown } from 'antd'
 import {
   TeamOutlined,
+  FolderOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -31,13 +32,18 @@ export function AdminLayout() {
   const menuItems: MenuProps['items'] = [
     { key: '/admin', icon: <DashboardOutlined />, label: '工作台' },
     ...(isAdmin()
-      ? [{ key: '/admin/users', icon: <TeamOutlined />, label: '用户管理' }]
+      ? [
+          { key: '/admin/users', icon: <TeamOutlined />, label: '用户管理' },
+          { key: '/admin/knowledge', icon: <FolderOutlined />, label: '知识库管理' },
+        ]
       : []),
   ]
 
-  const selectedKey = location.pathname.startsWith('/admin/users')
-    ? '/admin/users'
-    : '/admin'
+  const selectedKey = location.pathname.startsWith('/admin/knowledge')
+    ? '/admin/knowledge'
+    : location.pathname.startsWith('/admin/users')
+      ? '/admin/users'
+      : '/admin'
 
   return (
     <Layout style={{ minHeight: '100vh' }}>

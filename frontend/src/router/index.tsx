@@ -4,6 +4,7 @@ import { AdminLayout } from '../layouts/AdminLayout'
 import { LoginPage } from '../pages/Login'
 import { RegisterPage } from '../pages/Register'
 import { UserManagement } from '../pages/UserManagement'
+import { KnowledgeBase } from '../pages/KnowledgeBase'
 
 // ===== 应用路由配置 =====
 export function AppRouter() {
@@ -50,6 +51,8 @@ export function AppRouter() {
         />
         {/* 用户管理页：孙凤摇实现 */}
         <Route path="users" element={<UserManagement />} />
+        {/* 知识库管理：杨牧涵容器 + 孙凤摇列表组件 */}
+        <Route path="knowledge" element={<KnowledgeBase />} />
       </Route>
 
       {/* 兜底：所有不认识的路径 → 重定向到 /admin */}

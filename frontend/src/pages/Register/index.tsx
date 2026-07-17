@@ -38,6 +38,12 @@ export function RegisterPage() {
 
   return (
     <div className="auth-page">
+      {/* 右上角导航 */}
+      <div className="auth-top-nav">
+        <Link to="/login">登录</Link>
+        <Link to="/register" className="active">注册</Link>
+      </div>
+
       {/* 左上角校徽 */}
       <div className="auth-emblem-top">
         <img src="/images/logo.svg" alt="河海大学" />
