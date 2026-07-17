@@ -1,346 +1,141 @@
 package com.group9.campusqa.controller;
 
-
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.group9.campusqa.common.Result; // 引入你的统一 Result
 import com.group9.campusqa.entity.KbDocument;
 import com.group9.campusqa.service.DocumentProcessService;
 import com.group9.campusqa.service.DocumentService;
 import com.group9.campusqa.vo.DocumentVO;
+import com.group9.campusqa.dto.DocumentUpdateDTO;
+import com.group9.campusqa.dto.AiSearchRequest; // 使用已有的搜索类
+import com.group9.campusqa.util.FileStorageUtil;
+import com.group9.campusqa.context.UserContext;
 
-
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.servlet.http.HttpServletResponse;
 
-
-import java.io.File;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-
-
 
 @RestController
 @RequestMapping("/api/doc")
 public class DocumentController {
 
-
     private final DocumentService documentService;
-
     private final DocumentProcessService processService;
+    private final FileStorageUtil fileStorageUtil;
 
-
+    @Value("${campus-qa.ai.callback-token}")
+    private String expectedToken;
 
     public DocumentController(
             DocumentService documentService,
-            DocumentProcessService processService
+            DocumentProcessService processService,
+            FileStorageUtil fileStorageUtil
     ){
-
         this.documentService = documentService;
         this.processService = processService;
-
+        this.fileStorageUtil = fileStorageUtil;
     }
 
-
-
-
-    /**
-     * 上传文档
-     */
-    @PostMapping("/upload")
-    public Long upload(
-            @RequestParam("file") MultipartFile file
-    ) throws Exception {
-
-
-
-        String fileName =
-                UUID.randomUUID()
-                + "_"
-                + file.getOriginalFilename();
-
-
-
-        // 统一存储目录
-        String path =
-                "storage/uploads/"
-                + fileName;
-
-
-
-        File target =
-                new File(path);
-
-
-
-        // 自动创建目录
-        if(!target.getParentFile().exists()){
-
-            target.getParentFile().mkdirs();
-
+    private void checkAdminRole() {
+        if (!"admin".equals(UserContext.get().role())) {
+            throw new RuntimeException("403 Forbidden");
         }
+    }
 
+    @PostMapping("/upload")
+    public Result<Long> upload(@RequestParam("file") MultipartFile file) {
+        checkAdminRole();
 
+        FileStorageUtil.StoredFile storedFile = fileStorageUtil.save(file);
 
-        file.transferTo(target);
+        KbDocument doc = new KbDocument();
+        doc.setTitle(file.getOriginalFilename());
+        doc.setOriginalName(file.getOriginalFilename());
+        doc.setStoredName(storedFile.getStoredName());
+        doc.setFilePath(storedFile.getAbsolutePath());
+        doc.setFileSize(file.getSize());
 
+        String fileType = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".") + 1);
+        doc.setFileType(fileType);
+        doc.setCreateUserId(UserContext.get().id());
 
-
-        KbDocument doc =
-                new KbDocument();
-
-
-
-        doc.setTitle(
-                file.getOriginalFilename()
-        );
-
-
-        doc.setOriginalName(
-                file.getOriginalFilename()
-        );
-
-
-        doc.setStoredName(
-                fileName
-        );
-
-
-        doc.setFilePath(
-                path
-        );
-
-
-        doc.setFileSize(
-                file.getSize()
-        );
-
-
-        doc.setStatus(
-                "PENDING"
-        );
-
-
-        doc.setProcessStage(
-                "UPLOADED"
-        );
-
-
+        doc.setStatus("PENDING");
+        doc.setProcessStage("UPLOADED");
 
         documentService.saveDocument(doc);
+        processService.processDocument(doc.getId());
 
-
-
-        // 调用AI处理
-        processService.processDocument(
-                doc.getId()
-        );
-
-
-
-        return doc.getId();
-
+        return Result.success(doc.getId()); // 使用统一 Result
     }
 
-
-
-
-
-
-
-    /**
-     * 文档列表
-     */
     @GetMapping("/list")
-    public List<DocumentVO> list(){
-
-
-        return documentService.queryList();
-
+    public Result<Page<DocumentVO>> list(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status
+    ){
+        checkAdminRole();
+        return Result.success(documentService.queryPage(page, size, keyword, status)); // 使用统一 Result
     }
 
-
-
-
-
-
-    /**
-     * 文档详情
-     */
     @GetMapping("/{id}")
-    public DocumentVO detail(
-            @PathVariable Long id
-    ){
-
-        return documentService.queryById(id);
-
+    public Result<DocumentVO> detail(@PathVariable Long id){
+        checkAdminRole();
+        return Result.success(documentService.queryById(id));
     }
 
-
-
-
-
-
-
-
-    /**
-     * 重新处理
-     */
-    @PostMapping("/{id}/reprocess")
-    public String reprocess(
-            @PathVariable Long id
-    ){
-
-
+    @PutMapping("/{id}")
+    public Result<String> update(@PathVariable Long id, @RequestBody DocumentUpdateDTO req){
+        checkAdminRole();
+        documentService.updateDocument(id, req);
         documentService.retryProcess(id);
-
-
         processService.processDocument(id);
-
-
-
-        return "success";
-
+        return Result.success("success");
     }
 
-
-
-
-
-
-
-
-    /**
-     * 删除文档
-     */
     @DeleteMapping("/{id}")
-    public String delete(
-            @PathVariable Long id
-    ){
-
-
-        documentService.deleteDocument(id);
-
-
-        return "success";
-
+    public Result<String> delete(@PathVariable Long id){
+        checkAdminRole();
+        documentService.deleteDocumentFull(id);
+        return Result.success("success");
     }
 
-
-
-
-
-
-
-
-    /**
-     * 文件预览
-     */
     @GetMapping("/{id}/preview")
-    public String preview(
-            @PathVariable Long id
-    ){
-
-
-        return documentService.preview(id);
-
+    public void preview(@PathVariable Long id, HttpServletResponse response) throws Exception {
+        documentService.streamFileToResponse(id, response, false);
     }
 
-
-
-
-
-
-
-    /**
-     * 文件下载
-     */
     @GetMapping("/{id}/download")
-    public String download(
-            @PathVariable Long id
-    ){
-
-
-        return documentService.download(id);
-
+    public void download(@PathVariable Long id, HttpServletResponse response) throws Exception {
+        documentService.streamFileToResponse(id, response, true);
     }
 
-
-
-
-
-
-
-
-    /**
-     * 搜索
-     */
-    @GetMapping("/search")
-    public List<DocumentVO> search(
-            @RequestParam String keyword
-    ){
-
-
-        return documentService.search(keyword);
-
+    @PostMapping("/search")
+    public Result<?> search(@RequestBody AiSearchRequest req){ // 替换为 AiSearchRequest
+        checkAdminRole();
+        return Result.success(processService.semanticSearch(req.getQuestion(), req.getTopK()));
     }
 
-
-
-
-
-
-
-
-    /**
-     * Python处理回调
-     */
     @PostMapping("/callback")
     public Map<String,String> callback(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String,Object> body
     ){
-
-
-        if(body.get("doc_id")==null){
-
-            throw new RuntimeException(
-                    "缺少doc_id"
-            );
-
+        if (authHeader == null || !authHeader.replace("Bearer ", "").equals(expectedToken)) {
+            throw new RuntimeException("401 Unauthorized: Invalid Token");
+        }
+        if (body.get("doc_id") == null) {
+            throw new RuntimeException("缺少doc_id");
         }
 
+        Long docId = Long.valueOf(body.get("doc_id").toString());
+        String status = body.get("status") == null ? "FAILED" : body.get("status").toString();
 
-
-        Long docId =
-                Long.valueOf(
-                        body.get("doc_id").toString()
-                );
-
-
-
-        String status =
-                body.get("status")==null
-                ?
-                "FAILED"
-                :
-                body.get("status").toString();
-
-
-
-
-        documentService.updateStatus(
-                docId,
-                status,
-                body
-        );
-
-
-
-        return Map.of(
-                "message",
-                "success"
-        );
-
+        documentService.updateStatus(docId, status, body);
+        return Map.of("message", "success");
     }
-
-
 }
