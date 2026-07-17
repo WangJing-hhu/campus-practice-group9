@@ -65,3 +65,53 @@ export function searchDocuments(
 ): Promise<SearchResultItem[]> {
   return request.post('/doc/search', params)
 }
+
+// ===== 文件预览 / 下载（公开访问，无需JWT） =====
+
+/**
+ * 预览文档（PDF inline / TXT inline / DOC/DOCX 提示下载）
+ * 返回 { blob, contentType, filename } 供前端渲染或下载
+ */
+export async function previewDocument(id: number): Promise<{
+  blob: Blob
+  contentType: string
+  filename: string
+}> {
+  const response = await fetch(`/api/doc/${id}/preview`)
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ detail: '预览失败' }))
+    throw new Error(err.detail || err.message || `HTTP ${response.status}`)
+  }
+  const contentType = response.headers.get('Content-Type') || 'application/octet-stream'
+  const disposition = response.headers.get('Content-Disposition') || ''
+  const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+  const filename = match ? match[1].replace(/['"]/g, '') : `document-${id}`
+  const blob = await response.blob()
+  return { blob, contentType, filename }
+}
+
+/**
+ * 下载文档（Content-Disposition: attachment）
+ * 触发浏览器下载，支持 PDF/DOC/DOCX/TXT
+ */
+export async function downloadDocument(id: number): Promise<void> {
+  const response = await fetch(`/api/doc/${id}/download`)
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ detail: '下载失败' }))
+    throw new Error(err.detail || err.message || `HTTP ${response.status}`)
+  }
+  const blob = await response.blob()
+  const disposition = response.headers.get('Content-Disposition') || ''
+  const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+  const filename = match ? match[1].replace(/['"]/g, '') : `document-${id}`
+
+  // 触发浏览器下载
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
