@@ -1,16 +1,25 @@
-from pydantic_settings import BaseSettings
+import os
+from pathlib import Path
 
-class Settings(BaseSettings):
-    dashscope_api_key: str = ""
-    ai_service_port: int = 8000
-    embedding_model: str = "text-embedding-v3"
-    embedding_dim: int = 1024
-    chunk_size: int = 500
-    chunk_overlap: int = 50
-    top_k_default: int = 5
-    data_dir: str = "data"
-    callback_token: str = "ai-service-internal-token"
+_ENV_PATH = Path(__file__).parent.parent / ".env"
+if _ENV_PATH.exists():
+    with open(_ENV_PATH, "r", encoding="utf-8-sig") as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, value = line.split("=", 1)
+                os.environ[key.strip()] = value.strip()
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+class Settings:
+    def __init__(self):
+        self.dashscope_api_key: str = os.getenv("DASHSCOPE_API_KEY", "")
+        self.ai_service_port: int = 8000
+        self.embedding_model: str = "text-embedding-v3"
+        self.embedding_dim: int = 1024
+        self.chunk_size: int = 500
+        self.chunk_overlap: int = 50
+        self.top_k_default: int = 5
+        self.data_dir: str = "data"
+        self.callback_token: str = "ai-service-internal-token"
 
 settings = Settings()

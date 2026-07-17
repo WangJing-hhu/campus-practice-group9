@@ -1,8 +1,7 @@
 import json
-import os
-import threading
 import numpy as np
 import faiss
+import threading
 from pathlib import Path
 from .settings import settings
 
@@ -16,6 +15,7 @@ class VectorStore:
         self.lock = threading.Lock()
         self.index: faiss.IndexIDMap2 | None = None
         self.metadata: list[dict] = []
+        self._next_id = 0
         self._load()
 
     def _load(self):
@@ -26,15 +26,19 @@ class VectorStore:
             self.index = faiss.IndexIDMap2(base)
         if self.meta_path.exists():
             self.metadata = json.loads(self.meta_path.read_text(encoding="utf-8"))
+            if self.metadata:
+                self._next_id = max(m["vector_id"] for m in self.metadata) + 1
 
     def _save(self):
         faiss.write_index(self.index, str(self.index_path))
-        self.meta_path.write_text(json.dumps(self.metadata, ensure_ascii=False), encoding="utf-8")
+        self.meta_path.write_text(
+            json.dumps(self.metadata, ensure_ascii=False), encoding="utf-8"
+        )
 
     def add(self, vectors: list[list[float]], metas: list[dict]) -> int:
         with self.lock:
-            start_id = self.index.ntotal
-            ids = list(range(start_id, start_id + len(vectors)))
+            ids = list(range(self._next_id, self._next_id + len(vectors)))
+            self._next_id += len(vectors)
             mat = np.array(vectors, dtype=np.float32)
             self.index.add_with_ids(mat, np.array(ids, dtype=np.int64))
             for i, meta in enumerate(metas):
@@ -62,11 +66,15 @@ class VectorStore:
     def remove_by_doc_id(self, doc_id: int) -> int:
         with self.lock:
             ids_to_remove = [
-                m["vector_id"] for m in self.metadata if m.get("doc_id") == doc_id
+                m["vector_id"]
+                for m in self.metadata
+                if m.get("doc_id") == doc_id
             ]
             if ids_to_remove:
                 self.index.remove_ids(np.array(ids_to_remove, dtype=np.int64))
-                self.metadata = [m for m in self.metadata if m.get("doc_id") != doc_id]
+                self.metadata = [
+                    m for m in self.metadata if m.get("doc_id") != doc_id
+                ]
                 self._save()
             return len(ids_to_remove)
 
