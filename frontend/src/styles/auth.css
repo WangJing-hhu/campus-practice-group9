@@ -16,7 +16,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 130px;
+  height: 180px;
   background: linear-gradient(to bottom, #004098 -30%, transparent 100%);
   z-index: 0;
   pointer-events: none;
@@ -40,8 +40,8 @@
 /* ---- 右上角导航链接 ---- */
 .auth-top-nav {
   position: absolute;
-  top: 28px;
-  right: 48px;
+  top: 30px;
+  right: 80px;
   z-index: 3;
   display: flex;
   gap: 24px;
@@ -67,8 +67,8 @@
 /* ---- 左上角校徽 ---- */
 .auth-emblem-top {
   position: absolute;
-  top: 35px;
-  left: 48px;
+  top: 25px;
+  left: 80px;
   z-index: 2;
   display: flex;
   align-items: center;
@@ -80,31 +80,29 @@
   object-fit: contain;
 }
 
-.auth-emblem-top .emblem-text {
-  margin-top: 25px;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 500;
-  letter-spacing: 4px;
-  white-space: nowrap;
-}
-
 /* ---- 右侧区域：品牌文字 + 登录卡片 ---- */
 .auth-right {
   position: relative;
   z-index: 1;
   display: flex;
   align-items: center;
-  gap: 250px;
+  gap: 200px;
   white-space: nowrap;
 }
 
 .auth-hero {
-  text-align: right;
+    position: relative;
+    text-align: center;
   max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .auth-hero h1 {
+    position: relative;
+    z-index: 1;
   font-size: 52px;
   font-weight: 600;
   color: #004098;
@@ -115,6 +113,8 @@
 }
 
 .auth-hero .hero-subtitle {
+    position: relative;
+    z-index: 1;
   font-size: 15px;
   font-weight: 400;
   color: #1a5fa8;
@@ -123,16 +123,40 @@
 }
 
 .auth-hero .hero-motto {
-  font-size: 14px;
-  font-weight: 400;
-  color: #4a85c0;
-  letter-spacing: 2px;
-  line-height: 1.8;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.auth-hero .hero-motto img {
+    height: 68px;
+    width: auto;
+}
+
+/* runzx装饰：持续旋转的底层背景 */
+@keyframes spin {
+    from { transform: translate(-50%, -56%) rotate(0deg); }
+    to { transform: translate(-50%, -56%) rotate(360deg); }
+}
+
+.hero-decor {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    opacity: 0.5;
+    height: 460px;
+    width: auto;
+    z-index: 0;
+    pointer-events: none;
+    animation: spin 30s linear infinite;
 }
 
 /* ---- 登录卡片 ---- */
 .auth-card {
-  width: 400px;
+  width: 455px;
   background: rgba(255, 255, 255, 0.5);
     border-radius: 16px;
   padding: 44px 40px 36px;
@@ -148,7 +172,7 @@
 }
 
 .auth-card .card-title h3 {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 500;
   color: #1a1a1a;
   margin: 0 0 6px;
@@ -198,7 +222,7 @@
   text-align: center;
   margin-top: 24px;
   font-size: 13px;
-  color: #bbb;
+  color: #4a4a4a;
 }
 
 .auth-card .card-switch a {
@@ -207,7 +231,7 @@
 }
 
 /* ---- 响应式 ---- */
-@media (max-width: 1100px) {
+@media (max-width: 1008px) {
   .auth-hero {
     display: none;
   }

@@ -4,6 +4,7 @@ import { Layout, Menu, Button, Dropdown } from 'antd'
 import {
   TeamOutlined,
   FolderOutlined,
+  MessageOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -31,6 +32,7 @@ export function AdminLayout() {
 
   const menuItems: MenuProps['items'] = [
     { key: '/admin', icon: <DashboardOutlined />, label: '工作台' },
+    { key: '/chat', icon: <MessageOutlined />, label: '智能问答' },
     ...(isAdmin()
       ? [
           { key: '/admin/users', icon: <TeamOutlined />, label: '用户管理' },
@@ -39,11 +41,13 @@ export function AdminLayout() {
       : []),
   ]
 
-  const selectedKey = location.pathname.startsWith('/admin/knowledge')
-    ? '/admin/knowledge'
-    : location.pathname.startsWith('/admin/users')
-      ? '/admin/users'
-      : '/admin'
+  const selectedKey = location.pathname.startsWith('/chat')
+    ? '/chat'
+    : location.pathname.startsWith('/admin/knowledge')
+      ? '/admin/knowledge'
+      : location.pathname.startsWith('/admin/users')
+        ? '/admin/users'
+        : '/admin'
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
