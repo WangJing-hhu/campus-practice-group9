@@ -41,12 +41,21 @@ public class DocumentProcessServiceImpl implements DocumentProcessService {
         doc.setProcessStage("EXTRACTING"); // 进入提取阶段
         mapper.updateById(doc);
 
-        AiProcessRequest request = new AiProcessRequest();
+       AiProcessRequest request = new AiProcessRequest();
         request.setDocId(doc.getId());
         request.setPath(doc.getFilePath());
-        request.setTitle(doc.getTitle());
-        request.setCallbackUrl(callbackUrl);
+        
+        // 🌟 把文件原始名和新增的官网元数据一并传给 Python
+        request.setFileName(doc.getOriginalName()); 
+        request.setSourceUrl(doc.getSourceUrl());
+        request.setSourceSite(doc.getSourceSite());
+        request.setCategory(doc.getCategory());
+        
+        // 注意：将 LocalDate / LocalDateTime 转为 String 传给 Python
+        request.setPublishedAt(doc.getPublishedAt() != null ? doc.getPublishedAt().toString() : null);
+        request.setCrawledAt(doc.getCrawledAt() != null ? doc.getCrawledAt().toString() : null);
 
+        aiClient.process(request);
         try {
             // 调用 Python (此过程可能较长，Python通过callback通知进度)
             AiProcessResponse response = aiClient.process(request);

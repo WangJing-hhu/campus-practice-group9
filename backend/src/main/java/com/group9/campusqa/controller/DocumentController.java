@@ -12,12 +12,14 @@ import com.group9.campusqa.dto.CallbackRequest; // 引入回调DTO
 import com.group9.campusqa.dto.AiSearchRequest;
 import com.group9.campusqa.util.FileStorageUtil;
 import com.group9.campusqa.context.UserContext;
+import com.group9.campusqa.dto.OfficialSourceMetadataDTO;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.StringUtils;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Map;
@@ -51,10 +53,21 @@ public class DocumentController {
         }
     }
 
-    // 🌟 修复 4：上传接口返回完整 DocumentVO
-    @PostMapping("/upload")
-    public Result<DocumentVO> upload(@RequestParam("file") MultipartFile file) {
+   @PostMapping("/upload")
+    public Result<DocumentVO> upload(
+            @RequestParam("file") MultipartFile file,
+            // 🌟 接收王雨淇定义的可选官网元数据
+            OfficialSourceMetadataDTO metadata 
+    ) {
         checkAdminRole();
+
+        // 🌟 严格的安全校验：如果传入了来源链接，必须是 http 或 https
+        if (metadata != null && StringUtils.hasText(metadata.getSourceUrl())) {
+            String url = metadata.getSourceUrl().toLowerCase();
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                throw new BizException(400, "source_url 必须以 http 或 https 开头");
+            }
+        }
 
         FileStorageUtil.StoredFile storedFile = fileStorageUtil.save(file);
 
@@ -68,9 +81,17 @@ public class DocumentController {
         String fileType = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".") + 1);
         doc.setFileType(fileType);
         doc.setCreateUserId(UserContext.get().id());
-
         doc.setStatus("PENDING");
         doc.setProcessStage("UPLOADED");
+
+        // 🌟 将前端传来的官网元数据保存到 KbDocument 实体中
+        if (metadata != null) {
+            doc.setSourceUrl(metadata.getSourceUrl());
+            doc.setSourceSite(metadata.getSourceSite());
+            doc.setCategory(metadata.getCategory());
+            doc.setPublishedAt(metadata.getPublishedAt());
+            doc.setCrawledAt(metadata.getCrawledAt());
+        }
 
         documentService.saveDocument(doc);
         processService.processDocument(doc.getId());
