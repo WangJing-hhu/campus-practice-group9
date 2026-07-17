@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    # ???? 3306???? 3306 ?????? 3307
+    # 端口可通过 DB_PORT 环境变量覆盖（默认 3306，部分机器可能使用 3307）
     url: jdbc:mysql://localhost:${DB_PORT:3306}/campus_qa?useUnicode=true&characterEncoding=utf8mb4&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:}
@@ -12,6 +12,15 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Shanghai
     default-property-inclusion: non_null
+
+  # ================================================================
+  # Day4 新增: 文件上传大小限制（50MB）
+  # 必须与前端 beforeUpload 校验保持一致
+  # ================================================================
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 mybatis-plus:
   configuration:
@@ -23,12 +32,28 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 
-# JWT ???????????????????
+# JWT 配置（昨日成果，不变更）
 jwt:
   secret: ${JWT_SECRET:change-me-in-production-32chars!!}
-  expiration: 86400000  # 24 ??????
+  expiration: 86400000  # 24 小时（毫秒）
 
-# ??
+# ================================================================
+# Day4 新增: 知识库模块自定义配置
+# 敏感值（callback-token、API Key）仅通过环境变量注入
+# ================================================================
+campus-qa:
+  # 文件上传目录（相对于项目根目录，也可设为绝对路径）
+  upload:
+    dir: ${UPLOAD_DIR:storage/uploads}
+
+  # Python AI 服务内部调用配置
+  ai:
+    base-url: ${AI_BASE_URL:http://localhost:8000}
+    connect-timeout: 5      # 连接超时（秒）
+    response-timeout: 120   # 响应超时（秒）——大文件处理可能较慢
+    callback-token: ${AI_CALLBACK_TOKEN:day4-internal-callback-token}
+
+# 日志
 logging:
   level:
     com.group9.campusqa: debug
