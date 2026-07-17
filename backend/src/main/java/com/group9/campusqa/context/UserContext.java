@@ -1,31 +1,13 @@
 package com.group9.campusqa.context;
 
-public class UserContext {
-    private static final ThreadLocal<Long> userIdHolder = new ThreadLocal<>();
-    private static final ThreadLocal<String> usernameHolder = new ThreadLocal<>();
-    private static final ThreadLocal<String> roleHolder = new ThreadLocal<>();
+public final class UserContext {
+    private static final ThreadLocal<CurrentUser> CURRENT = new ThreadLocal<>();
 
-    public static void set(Long userId, String username, String role) {
-        userIdHolder.set(userId);
-        usernameHolder.set(username);
-        roleHolder.set(role);
-    }
+    private UserContext() {}
 
-    public static Long getUserId() {
-        return userIdHolder.get();
-    }
+    public static void set(CurrentUser user) { CURRENT.set(user); }
+    public static CurrentUser get() { return CURRENT.get(); }
+    public static void clear() { CURRENT.remove(); }
 
-    public static String getUsername() {
-        return usernameHolder.get();
-    }
-
-    public static String getRole() {
-        return roleHolder.get();
-    }
-
-    public static void clear() {
-        userIdHolder.remove();
-        usernameHolder.remove();
-        roleHolder.remove();
-    }
+    public record CurrentUser(Long id, String username, String role) {}
 }
