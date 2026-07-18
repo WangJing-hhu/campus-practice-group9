@@ -8,12 +8,14 @@
    1. 聊天页整体布局
    =================================================== */
 
-/* 聊天页 flex 容器（供 Chat 页面使用） */
+/* 聊天页 flex 容器 */
 .chat-layout {
   display: flex;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   background: #fff;
+  border-radius: 6px;
 }
 
 /* 右侧主区域 */
@@ -22,14 +24,15 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
   overflow: hidden;
 }
 
 /* 消息滚动区 */
 .chat-layout__messages {
   flex: 1;
+  min-height: 0;
   overflow: hidden;
-  position: relative;
 }
 
 /* 输入区 */
@@ -42,13 +45,14 @@
    =================================================== */
 
 .chat-sidebar {
-  width: 280px;
-  min-width: 280px;
+  width: 260px;
+  min-width: 260px;
   border-right: 1px solid #f0f0f0;
   display: flex;
   flex-direction: column;
-  background: #fafafa;
+  background: #fafbfc;
   transition: width 0.2s ease;
+  flex-shrink: 0;
 }
 
 /* 收起状态 */
@@ -68,7 +72,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
+  padding: 18px 16px 14px;
   border-bottom: 1px solid #f0f0f0;
   flex-shrink: 0;
   gap: 8px;
@@ -77,6 +81,7 @@
 .chat-sidebar__title {
   font-size: 15px;
   white-space: nowrap;
+  font-weight: 600;
 }
 
 .chat-sidebar__header-actions {
@@ -118,7 +123,7 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 12px 16px;
+  padding: 12px 14px;
   cursor: pointer;
   border-bottom: 1px solid #f5f5f5;
   transition: background 0.15s;
@@ -129,18 +134,18 @@
 }
 
 .chat-sidebar__item--active {
-  background: #e6f0ff;
+  background: #e8f2ff;
   border-left: 3px solid #005BAC;
-  padding-left: 13px;
+  padding-left: 11px;
 }
 
 .chat-sidebar__item--active:hover {
-  background: #e6f0ff;
+  background: #e8f2ff;
 }
 
 .chat-sidebar__item-icon {
-  margin-top: 2px;
-  color: #8c8c8c;
+  margin-top: 3px;
+  color: #a0a0a0;
   font-size: 14px;
   flex-shrink: 0;
 }
@@ -159,7 +164,7 @@
 
 .chat-sidebar__item-title {
   font-size: 13px;
-  line-height: 1.4;
+  line-height: 1.5;
   word-break: break-word;
   overflow-wrap: break-word;
 }
@@ -203,12 +208,11 @@
   overflow-y: auto;
   overflow-x: hidden;
   scroll-behavior: auto;
-  position: relative;
 }
 
 .chat-messages__list {
-  padding: 20px 24px;
-  max-width: 860px;
+  padding: 28px 32px 20px;
+  max-width: 940px;
   margin: 0 auto;
 }
 
@@ -240,7 +244,7 @@
   border-radius: 50%;
   border: 1px solid #d9d9d9;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -248,11 +252,11 @@
   color: #595959;
   font-size: 14px;
   z-index: 5;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .chat-messages__scroll-btn:hover {
-  box-shadow: 0 4px 12px rgba(0, 91, 172, 0.2);
+  box-shadow: 0 4px 14px rgba(0, 91, 172, 0.18);
   color: #005BAC;
   border-color: #005BAC;
 }
@@ -264,8 +268,8 @@
 /* ---- 消息行 ---- */
 .chat-bubble-row {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 22px;
   align-items: flex-start;
 }
 
@@ -279,14 +283,14 @@
 
 /* ---- 头像 ---- */
 .chat-bubble__avatar {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .chat-bubble__avatar--user {
@@ -295,7 +299,7 @@
 }
 
 .chat-bubble__avatar--assistant {
-  background: #f0f5ff;
+  background: #e8f2ff;
   color: #005BAC;
 }
 
@@ -306,7 +310,7 @@
 
 /* ---- 气泡体 ---- */
 .chat-bubble__body {
-  max-width: 75%;
+  max-width: 74%;
   min-width: 0;
 }
 
@@ -319,8 +323,8 @@
 
 /* ---- 气泡 ---- */
 .chat-bubble {
-  padding: 10px 16px;
-  border-radius: 12px;
+  padding: 12px 18px;
+  border-radius: 10px;
   line-height: 1.7;
   font-size: 14px;
   word-break: break-word;
@@ -328,16 +332,16 @@
 }
 
 .chat-bubble--user {
-  background: #e6f0ff;
+  background: #e8f2ff;
   color: #1a1a1a;
   border-top-right-radius: 4px;
 }
 
 .chat-bubble--assistant {
-  background: #f5f5f5;
+  background: #f7f8fa;
   color: #1a1a1a;
   border-top-left-radius: 4px;
-  border: 1px solid #eeeeee;
+  border: 1px solid #eeeef0;
 }
 
 .chat-bubble--error {
@@ -349,6 +353,47 @@
   white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: break-word;
+}
+
+/* ---- 引用按钮 ---- */
+.chat-citation {
+  display: inline;
+  padding: 0 1px;
+  margin: 0 1px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #005BAC;
+  background: none;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  line-height: inherit;
+  vertical-align: baseline;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+
+.chat-citation:hover {
+  background: #e6f0ff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.chat-citation:focus-visible {
+  outline: 2px solid #005BAC;
+  outline-offset: 1px;
+  background: #e6f0ff;
+}
+
+.chat-citation--unresolved {
+  color: #bfbfbf;
+  cursor: default;
+  text-decoration: none;
+}
+
+.chat-citation--unresolved:hover {
+  background: none;
+  text-decoration: none;
 }
 
 /* ---- 流式光标 ---- */
@@ -363,27 +408,22 @@
 }
 
 @keyframes chat-cursor-blink {
-  0%,
-  50% {
-    opacity: 1;
-  }
-  51%,
-  100% {
-    opacity: 0;
-  }
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }
 
 /* ---- 来源区域 ---- */
 .chat-bubble__sources {
-  margin-top: 10px;
+  margin-top: 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .chat-bubble__sources-label {
   font-size: 12px;
   margin-bottom: 2px;
+  color: #8c8c8c;
 }
 
 /* ===================================================
@@ -393,13 +433,21 @@
 .chat-source {
   border: 1px solid #e8e8e8;
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: 12px 16px;
   background: #fff;
-  transition: border-color 0.2s;
+  transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+  scroll-margin-top: 80px;
 }
 
 .chat-source:hover {
-  border-color: #b4d5ff;
+  border-color: #c4d8f0;
+}
+
+/* ---- 高亮动画 ---- */
+.chat-source--highlight {
+  border-color: #005BAC !important;
+  background: #f0f7ff !important;
+  box-shadow: 0 0 0 3px rgba(0, 91, 172, 0.12);
 }
 
 /* ---- 头部信息行 ---- */
@@ -408,7 +456,7 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .chat-source__index {
@@ -437,12 +485,12 @@
 .chat-source__score {
   margin-left: auto;
   font-size: 12px;
-  color: #52c41a;
+  color: #389e0d;
   background: #f6ffed;
   border: 1px solid #b7eb8f;
   border-radius: 4px;
-  padding: 0 6px;
-  line-height: 20px;
+  padding: 1px 8px;
+  line-height: 22px;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -460,13 +508,24 @@
   word-break: break-word;
   overflow-wrap: break-word;
   margin-bottom: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 展开后取消行数限制 */
+.chat-source__body .ant-typography.chat-source__content {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
 }
 
 .chat-source__toggle {
   padding: 0;
   font-size: 12px;
   height: auto;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 /* ===================================================
@@ -474,26 +533,28 @@
    =================================================== */
 
 .chat-input {
-  padding: 12px 24px;
-  border-top: 1px solid #f0f0f0;
+  padding: 16px 28px 20px;
+  border-top: 1px solid #eeeef0;
   background: #fff;
+  box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.04);
 }
 
 .chat-input__box {
   display: flex;
   align-items: flex-end;
   gap: 12px;
-  max-width: 860px;
+  max-width: 940px;
   margin: 0 auto;
 }
 
 .chat-input__textarea {
   flex: 1;
   min-width: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14px;
   line-height: 1.6;
   resize: none;
+  padding: 10px 14px;
 }
 
 .chat-input__textarea:focus {
@@ -504,8 +565,9 @@
 .chat-input__actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-shrink: 0;
+  padding-bottom: 2px;
 }
 
 .chat-input__count {
@@ -517,6 +579,10 @@
 .chat-input__send-btn,
 .chat-input__stop-btn {
   white-space: nowrap;
+  border-radius: 8px;
+  height: 38px;
+  padding: 0 20px;
+  font-size: 14px;
 }
 
 /* ===================================================
@@ -527,11 +593,11 @@
   text-align: center;
   max-width: 480px;
   margin: 0 auto;
-  padding: 48px 24px;
+  padding: 60px 24px;
 }
 
 .chat-empty__icon-wrap {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .chat-empty__icon {
@@ -544,14 +610,15 @@
 }
 
 .chat-empty__title {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   font-weight: 500;
 }
 
 .chat-empty__desc {
   font-size: 14px;
   display: block;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
+  color: #8c8c8c;
 }
 
 /* ---- 示例问题 ---- */
@@ -562,7 +629,8 @@
 .chat-empty__questions-label {
   font-size: 13px;
   display: block;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
+  color: #8c8c8c;
 }
 
 .chat-empty__questions-list {
@@ -587,15 +655,15 @@
    8. 响应式适配
    =================================================== */
 
-/* ≤ 900px：侧栏变窄 */
-@media (max-width: 900px) {
+/* ≤ 960px：侧栏变窄，消息区 max-width 收紧 */
+@media (max-width: 960px) {
   .chat-sidebar {
-    width: 240px;
-    min-width: 240px;
+    width: 230px;
+    min-width: 230px;
   }
 
   .chat-sidebar__header {
-    padding: 12px;
+    padding: 14px 12px;
   }
 
   .chat-sidebar__item {
@@ -603,19 +671,24 @@
   }
 
   .chat-messages__list {
-    padding: 16px;
+    padding: 20px 18px;
+    max-width: 100%;
   }
 
   .chat-input {
-    padding: 10px 16px;
+    padding: 12px 18px 16px;
+  }
+
+  .chat-input__box {
+    max-width: 100%;
   }
 
   .chat-bubble__body {
-    max-width: 85%;
+    max-width: 82%;
   }
 }
 
-/* ≤ 768px：侧栏可隐藏（通过 collapsed prop 控制） */
+/* ≤ 768px：侧栏可隐藏 */
 @media (max-width: 768px) {
   .chat-sidebar__collapse-btn {
     display: inline-flex;
@@ -625,48 +698,42 @@
     position: relative;
   }
 
-  /* 展开的侧栏在窄屏下使用绝对定位覆盖 */
   .chat-sidebar:not(.chat-sidebar--collapsed) {
     position: absolute;
     top: 0;
     left: 0;
     bottom: 0;
     z-index: 10;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
   }
 
   .chat-messages__list {
-    padding: 12px;
-    max-width: 100%;
+    padding: 16px 14px;
   }
 
   .chat-input {
-    padding: 8px 12px;
-  }
-
-  .chat-input__box {
-    max-width: 100%;
+    padding: 10px 14px 14px;
   }
 
   .chat-bubble__body {
-    max-width: 88%;
+    max-width: 86%;
   }
 }
 
 /* ≤ 480px：进一步紧凑 */
 @media (max-width: 480px) {
   .chat-bubble__avatar {
-    width: 30px;
-    height: 30px;
-    font-size: 14px;
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
   }
 
   .chat-bubble__body {
-    max-width: 85%;
+    max-width: 82%;
   }
 
   .chat-bubble {
-    padding: 8px 12px;
+    padding: 10px 14px;
     font-size: 13px;
   }
 
@@ -680,6 +747,10 @@
   }
 
   .chat-source {
-    padding: 8px 10px;
+    padding: 10px 12px;
+  }
+
+  .chat-bubble-row--user .chat-bubble__body {
+    max-width: 88%;
   }
 }

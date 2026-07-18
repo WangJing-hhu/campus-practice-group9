@@ -9,6 +9,8 @@ const { Text, Paragraph } = Typography
 export interface SourceCardProps {
   /** 单条来源数据 */
   source: ChatSource
+  /** 全局唯一锚点 id，由父组件（ChatBubble）根据 messageId + source.index 构造 */
+  anchorId: string
 }
 
 // ===== 工具函数 =====
@@ -17,7 +19,6 @@ function formatScore(score: number | undefined | null): string {
   if (score == null) return '—'
   const num = Number(score)
   if (isNaN(num)) return '—'
-  // 如果值 ≤ 1 则视为 0~1 浮点数
   const pct = num <= 1 ? Math.round(num * 100) : Math.round(num)
   return `${pct}%`
 }
@@ -33,8 +34,9 @@ function safeSummary(content: string | undefined | null, maxLen = 200): string {
  * 来源卡片。
  * 展示检索到的知识库文档来源信息：编号、标题、文件名、相似度、内容摘要。
  * 支持展开/收起，字段缺失时使用安全占位文本。
+ * 通过 id="chat-source-{index}" 支持引用点击滚动定位。
  */
-export function SourceCard({ source }: SourceCardProps) {
+export function SourceCard({ source, anchorId }: SourceCardProps) {
   const [expanded, setExpanded] = useState(false)
   const {
     index,
@@ -47,7 +49,10 @@ export function SourceCard({ source }: SourceCardProps) {
   const hasContent = !!content
 
   return (
-    <div className="chat-source">
+    <div
+      id={anchorId}
+      className="chat-source"
+    >
       {/* 头部信息行 */}
       <div className="chat-source__header">
         <span className="chat-source__index">

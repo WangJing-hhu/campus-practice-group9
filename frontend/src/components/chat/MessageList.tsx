@@ -125,7 +125,7 @@ export function MessageList({
     >
       <div className="chat-messages__list">
         {messages.map((msg) => (
-          <ChatBubble key={msg.id} message={msg} />
+          <ChatBubble key={msg.id} message={msg} messageId={msg.id} />
         ))}
       </div>
 

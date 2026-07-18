@@ -299,48 +299,57 @@ export function ChatPage() {
   }
 
   return (
-    <div className="chat-layout" style={{ height: 'calc(100vh - 120px)' }}>
-      <ConversationSidebar
-        conversations={conversations}
-        activeConversationId={activeConversationId}
-        loading={convLoading}
-        hasMore={false}
-        collapsed={sidebarCollapsed}
-        onCreate={handleNewChat}
-        onSelect={handleSelectConversation}
-        onRename={handleRename}
-        onDelete={handleDeleteConversation}
-        onLoadMore={() => undefined}
-        onCollapse={setSidebarCollapsed}
-      />
+    <div
+      style={{
+        margin: -20,
+        height: 'calc(100vh - 56px)',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <div className="chat-layout" style={{ flex: 1, minHeight: 0 }}>
+        <ConversationSidebar
+          conversations={conversations}
+          activeConversationId={activeConversationId}
+          loading={convLoading}
+          hasMore={false}
+          collapsed={sidebarCollapsed}
+          onCreate={handleNewChat}
+          onSelect={handleSelectConversation}
+          onRename={handleRename}
+          onDelete={handleDeleteConversation}
+          onLoadMore={() => undefined}
+          onCollapse={setSidebarCollapsed}
+        />
 
-      <div className="chat-layout__main">
-        <div className="chat-layout__messages">
-          <MessageList
-            messages={uiMessages}
-            loading={detailLoading}
-            emptyStatus={emptyStatus}
-            onSelectQuestion={handleSend}
-          />
-        </div>
-
-        {error && (
-          <div style={{ textAlign: 'center', color: '#e74c3c', padding: '8px 16px', fontSize: 13, flexShrink: 0 }}>
-            {error}
+        <div className="chat-layout__main">
+          <div className="chat-layout__messages">
+            <MessageList
+              messages={uiMessages}
+              loading={detailLoading}
+              emptyStatus={emptyStatus}
+              onSelectQuestion={handleSend}
+            />
           </div>
-        )}
 
-        <div className="chat-layout__input">
-          <ChatInput
-            value={inputValue}
-            disabled={false}
-            generating={sending}
-            placeholder="请输入你的问题"
-            maxLength={2000}
-            onChange={setInputValue}
-            onSend={() => handleSend(inputValue)}
-            onStop={handleStop}
-          />
+          {error && (
+            <div style={{ textAlign: 'center', color: '#e74c3c', padding: '8px 16px', fontSize: 13, flexShrink: 0 }}>
+              {error}
+            </div>
+          )}
+
+          <div className="chat-layout__input">
+            <ChatInput
+              value={inputValue}
+              disabled={false}
+              generating={sending}
+              placeholder="请输入你的问题"
+              maxLength={2000}
+              onChange={setInputValue}
+              onSend={() => handleSend(inputValue)}
+              onStop={handleStop}
+            />
+          </div>
         </div>
       </div>
     </div>
