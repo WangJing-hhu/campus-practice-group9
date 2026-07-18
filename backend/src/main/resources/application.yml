@@ -53,6 +53,32 @@ campus-qa:
     response-timeout: 120   # 响应超时（秒）——大文件处理可能较慢
     callback-token: ${AI_CALLBACK_TOKEN:day4-internal-callback-token}
 
+  # ================================================================
+  # Day5 新增: LLM 与 Prompt 配置
+  # 敏感值（api-key）仅通过环境变量注入，禁止硬编码或提交 Git
+  # ================================================================
+  llm:
+    # DashScope OpenAI 兼容接口地址
+    base-url: ${LLM_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+    # DashScope API Key（必填，通过环境变量 DASHSCOPE_API_KEY 注入）
+    api-key: ${DASHSCOPE_API_KEY:}
+    # 模型名称
+    model: ${LLM_MODEL:qwen-plus}
+    # 温度（0.0-2.0），越低越确定
+    temperature: ${LLM_TEMPERATURE:0.30}
+    # 最大输出 token 数
+    max-tokens: ${LLM_MAX_TOKENS:1024}
+    # 连接超时（秒）
+    connect-timeout: 10
+    # 响应超时（秒）
+    response-timeout: ${LLM_RESPONSE_TIMEOUT:60}
+
+  prompt:
+    # 系统角色提示词
+    system: "你是河海大学校园问答助手，只能根据提供的参考资料回答。请严格依据参考资料中的信息作答，不得补充任何未在资料中出现的事实、数据或推测。"
+    # 无资料时的指令
+    no-sources-instruction: "当前没有可用的参考资料，请直接回复\"根据现有资料，暂未找到相关信息\"，不要做任何额外解释。"
+
 # 日志
 logging:
   level:
