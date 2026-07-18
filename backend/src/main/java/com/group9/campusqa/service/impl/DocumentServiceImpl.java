@@ -97,7 +97,7 @@ public class DocumentServiceImpl extends ServiceImpl<KbDocumentMapper, KbDocumen
         return vo;
     }
 
-   @Override
+  @Override
     public void updateDocument(Long id, MultipartFile file, String title) {
         KbDocument doc = this.getById(id);
         if (doc == null) return;
@@ -108,6 +108,14 @@ public class DocumentServiceImpl extends ServiceImpl<KbDocumentMapper, KbDocumen
         
       
         if (file != null && !file.isEmpty()) {
+            // 🌟 新增：如果上传了新文件，在更新数据库前，必须同步清理 Python 端的旧向量
+            try {
+                aiClient.delete(id);
+            } catch (Exception e) {
+                log.warn("更新文件前清理旧向量失败: {}", e.getMessage());
+                // 这里用 warn 记录即可，不要阻断后续的文件更新逻辑
+            }
+
             FileStorageUtil.StoredFile storedFile = fileStorageUtil.replace(doc.getFilePath(), file);
             doc.setOriginalName(file.getOriginalFilename());
             doc.setStoredName(storedFile.getStoredName());
@@ -115,10 +123,16 @@ public class DocumentServiceImpl extends ServiceImpl<KbDocumentMapper, KbDocumen
             doc.setFileSize(file.getSize());
             String fileType = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".") + 1);
             doc.setFileType(fileType);
+            
+            // 更新了文件，需要将状态重置为 PENDING 等待重新处理
+            doc.setStatus("PENDING");
+            doc.setProcessStage("UPLOADED"); 
+            doc.setChunkCount(0); 
+            doc.setErrorMessage(""); 
         }
         this.updateById(doc);
     }
-
+    
     @Override
     public void deleteDocumentFull(Long id) {
         KbDocument doc = this.getById(id);
