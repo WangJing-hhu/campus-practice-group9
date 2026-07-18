@@ -70,6 +70,10 @@ public class RagServiceImpl implements RagService {
         throw new BizException(403, "无权访问此会话");
     }
     context.conversationId = request.getConversationId();
+     }else {
+    // ✅ 必须补上这一行，否则 context 里没有 ID！
+    QaConversation newConversation = chatHistoryService.createConversation(userId);
+    context.conversationId = newConversation.getId();
 }
         // 2. 初始化一条 PENDING 状态的聊天记录
         QaRecord record = new QaRecord();
@@ -97,7 +101,7 @@ public class RagServiceImpl implements RagService {
             log.error("调用 Python 检索失败", e);
             record.setStatus("FAILED");
             record.setErrorMessage("检索服务不可用");
-            chatHistoryService.saveRecord(record);
+            chatHistoryService.updateRecord(record);
             throw new BizException(500, "检索服务不可用，请稍后再试");
         }
 
@@ -105,7 +109,8 @@ public class RagServiceImpl implements RagService {
         context.sourceVOs = convertToSourceVOs(context.searchResults);
 
         // 5. 获取最近 3 轮历史
-        context.recentHistory = chatHistoryService.getRecentHistory(userId, context.conversationId, 3);
+       context.recentHistory = chatHistoryService.getRecentHistory(userId, context.conversationId, 3);
+
 
         return context;
     }
@@ -138,7 +143,7 @@ public class RagServiceImpl implements RagService {
         context.record.setAnswer(answer);
         context.record.setStatus("COMPLETED");
         context.record.setLatencyMs(latency);
-        chatHistoryService.saveRecord(context.record);
+        chatHistoryService.updateRecord(context.record);
 
         ChatResponse response = new ChatResponse();
         response.setConversationId(context.conversationId);
@@ -176,7 +181,7 @@ public class RagServiceImpl implements RagService {
                     context.record.setAnswer(LlmClient.NO_DATA_ANSWER);
                     context.record.setStatus("COMPLETED");
                     context.record.setLatencyMs((int) (System.currentTimeMillis() - startTime));
-                    chatHistoryService.saveRecord(context.record);
+                    chatHistoryService.updateRecord(context.record);
                     emitter.complete();
                     return;
                 }
@@ -201,7 +206,7 @@ public class RagServiceImpl implements RagService {
                 context.record.setAnswer(streamResult.getText());
                 context.record.setStatus(streamResult.isInterrupted() ? "INTERRUPTED" : "COMPLETED");
                 context.record.setLatencyMs((int) (System.currentTimeMillis() - startTime));
-                chatHistoryService.saveRecord(context.record);
+                chatHistoryService.updateRecord(context.record);
                 
                 emitter.complete();
 

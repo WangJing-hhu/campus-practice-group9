@@ -105,4 +105,11 @@ public interface ChatHistoryService extends IService<QaConversation> {
      * @return 截断后的标题
      */
     String generateTitle(String question);
+    /**
+     * 更新问答记录。
+     * 专门用于更新状态 (COMPLETED/FAILED) 或 答案内容。
+     *
+     * @param record 需要更新的记录（必须包含 ID）
+     */
+    void updateRecord(QaRecord record); // <--- 加这一行
 }

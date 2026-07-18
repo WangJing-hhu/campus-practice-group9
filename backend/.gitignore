@@ -18,3 +18,15 @@ application-dev.yml
 
 # Logs
 *.log
+data/
+scripts/
+tests/
+pyproject.toml
+uv.lock
+.DS_Store
+data/
+scripts/
+tests/
+pyproject.toml
+uv.lock
+.DS_Store

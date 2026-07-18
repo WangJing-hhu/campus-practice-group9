@@ -186,6 +186,12 @@ public class ChatHistoryServiceImpl
         }
         return record;
     }
+    
+    @Override
+    public void updateRecord(QaRecord record) {
+        // 使用 MyBatis-Plus 提供的 updateById，这才是更新该有语义的方法
+        this.recordMapper.updateById(record); 
+    }
 
     // ── 工具方法 ──────────────────────────────────────────
 
