@@ -61,7 +61,7 @@ def main():
     generated_dir = Path(args.generated_dir)
     entries = []
 
-    stats = {"NEW": 0, "UNCHANGED": 0, "UPDATED": 0, "MISSING": 0}
+    stats = {"NEW": 0, "UNCHANGED": 0, "UPDATED": 0, "MISSING": 0, "INVALID": 0}
 
     for row in rows:
         page_id = row["id"].strip()
@@ -88,27 +88,40 @@ def main():
 
         # 检查生成的 TXT
         generated_file = generated_dir / f"{page_id}.txt"
+        err_file = generated_dir / f"{page_id}.error"
+
         if generated_file.exists():
-            entry["content_hash"] = compute_hash(str(generated_file))
-            old = existing.get(page_id, {})
-            old_hash = old.get("content_hash")
-            if old_hash == entry["content_hash"]:
-                entry["import_status"] = old.get("import_status", "PENDING")
-                entry["crawled_at"] = old.get("crawled_at", entry["crawled_at"])
-                stats["UNCHANGED"] += 1
-            elif old_hash is not None:
-                # 内容变化了
-                entry["import_status"] = "PENDING"
-                stats["UPDATED"] += 1
+            # 读取正文内容，检查长度
+            text = generated_file.read_text(encoding="utf-8")
+            content_len = len(text.strip())
+
+            # 正文不足 100 字或有 .error 文件 → 标记 INVALID，禁止导入
+            if content_len < 100 or err_file.exists():
+                entry["content_hash"] = compute_hash(str(generated_file))
+                entry["import_status"] = "INVALID"
+                if err_file.exists():
+                    entry["error_note"] = err_file.read_text(encoding="utf-8").strip()[:500]
+                else:
+                    entry["error_note"] = f"正文不足 100 字（实际 {content_len} 字）"
+                stats["INVALID"] = stats.get("INVALID", 0) + 1
             else:
-                # 新文件
-                stats["NEW"] += 1
+                entry["content_hash"] = compute_hash(str(generated_file))
+                old = existing.get(page_id, {})
+                old_hash = old.get("content_hash")
+                if old_hash == entry["content_hash"]:
+                    entry["import_status"] = old.get("import_status", "PENDING")
+                    if entry["import_status"] == "INVALID":
+                        entry["import_status"] = "INVALID"
+                    entry["crawled_at"] = old.get("crawled_at", entry["crawled_at"])
+                    stats["UNCHANGED"] += 1
+                elif old_hash is not None:
+                    entry["import_status"] = "PENDING"
+                    stats["UPDATED"] += 1
+                else:
+                    stats["NEW"] += 1
         else:
-            # 源列表有但无生成文件
             entry["import_status"] = "MISSING"
             stats["MISSING"] += 1
-            # 检查是否有 .error 文件
-            err_file = generated_dir / f"{page_id}.error"
             if err_file.exists():
                 with open(err_file, "r", encoding="utf-8") as f:
                     entry["error_note"] = f.read().strip()[:500]
@@ -122,7 +135,8 @@ def main():
     total = len(entries)
     print(f"📋 manifest.json 已更新: 共 {total} 条")
     print(f"   NEW={stats['NEW']}  UNCHANGED={stats['UNCHANGED']}"
-          f"  UPDATED={stats['UPDATED']}  MISSING={stats['MISSING']}")
+          f"  UPDATED={stats['UPDATED']}  MISSING={stats['MISSING']}"
+          f"  INVALID={stats['INVALID']}")
 
 
 if __name__ == "__main__":

@@ -97,7 +97,10 @@ def main():
     generated_dir = Path(args.generated_dir)
 
     # 筛选需要导入的条目
-    pending = [e for e in entries if e.get("import_status") in ("PENDING", "UPDATED")]
+    # 筛选需要导入的条目：只导入 APPROVED 且状态为 PENDING/UPDATED，排除 INVALID
+    pending = [e for e in entries
+               if e.get("review_status") == "APPROVED"
+               and e.get("import_status") in ("PENDING", "UPDATED")]
 
     if not pending:
         print("✅ 没有待导入的条目")

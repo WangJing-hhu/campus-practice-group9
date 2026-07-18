@@ -76,6 +76,9 @@ def fetch_page(url: str, timeout: int, retries: int) -> tuple[str | None, str | 
         try:
             resp = requests.get(url, headers=HEADERS, timeout=timeout)
             resp.raise_for_status()
+            # 重定向后再次校验域名，防止跳转到外部站点
+            if resp.url != url and not is_allowed_url(resp.url):
+                return None, f"重定向到非白名单域名: {resp.url}"
             # 检查 Content-Type，只保留 text/html
             ct = resp.headers.get("Content-Type", "")
             if "text/html" not in ct and "text/plain" not in ct:
