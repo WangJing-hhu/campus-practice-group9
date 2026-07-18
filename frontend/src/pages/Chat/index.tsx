@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { message, Spin } from 'antd'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { message } from 'antd'
 import { useAuthStore } from '../../store/auth'
 import {
   sendChatStream,
@@ -14,6 +14,11 @@ import type {
   ChatSource,
   StreamMeta,
 } from '../../types/chat'
+import { ConversationSidebar } from '../../components/chat/ConversationSidebar'
+import { MessageList } from '../../components/chat/MessageList'
+import { ChatInput } from '../../components/chat/ChatInput'
+import type { ChatMessage } from '../../components/chat/MessageList'
+import '../../styles/chat.css'
 
 // ===== 聊天页面容器 =====
 // 负责：会话管理、消息流、SSE解析、状态分发
@@ -33,7 +38,7 @@ export function ChatPage() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [activeConversationId, setActiveConversationId] = useState<number | null>(null)
   const [convPage, setConvPage] = useState(1)
-  const [convTotal, setConvTotal] = useState(0)
+  const [, setConvTotal] = useState(0)
   const [convLoading, setConvLoading] = useState(false)
 
   // 消息
@@ -46,8 +51,10 @@ export function ChatPage() {
   // 详情加载
   const [detailLoading, setDetailLoading] = useState(false)
 
-  const inputRef = useRef<HTMLTextAreaElement>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  // UI 状态
+  const [inputValue, setInputValue] = useState('')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
   const mounted = useRef(true)
   const currentConversationId = useRef<number | null>(null)
 
@@ -113,7 +120,7 @@ export function ChatPage() {
     setStreamingText('')
     setStreamingSources([])
     setError(null)
-    inputRef.current?.focus()
+    setInputValue('')
   }, [])
 
   // ===== 发送消息 =====
@@ -124,6 +131,7 @@ export function ChatPage() {
     setSending(true)
     setStreamingText('')
     setStreamingSources([])
+    setInputValue('')
 
     // 添加用户消息
     const userMsg: MessageItem = { role: 'user', content: question }
@@ -251,6 +259,35 @@ export function ChatPage() {
     }
   }, [stopStream, streamingText, streamingSources])
 
+  // ===== 转换为组件需要的消息格式 =====
+  const uiMessages: ChatMessage[] = useMemo(() => {
+    const mapped: ChatMessage[] = messages.map((msg, index) => ({
+      id: msg.recordId ?? `${msg.role}-${index}`,
+      role: msg.role,
+      content: msg.content,
+      sources: msg.sources,
+      isStreaming: false,
+      isError: false,
+    }))
+
+    // 追加流式生成中的临时消息
+    if (streamingText) {
+      mapped.push({
+        id: 'streaming',
+        role: 'assistant',
+        content: streamingText,
+        sources: streamingSources,
+        isStreaming: true,
+        isError: false,
+      })
+    }
+
+    return mapped
+  }, [messages, streamingText, streamingSources])
+
+  // ===== 空状态类型 =====
+  const emptyStatus = error && messages.length === 0 ? 'network-error' as const : 'normal' as const
+
   // ===== 未登录 =====
   if (!isLoggedIn()) {
     return (
@@ -261,186 +298,49 @@ export function ChatPage() {
     )
   }
 
-  // 孙凤摇组件接入时的 props（提前声明避免 TS 报未使用）
-  void handleRename; // 孙凤摇侧栏重命名功能使用
-
-  // 会话侧栏: conversations, convLoading, convPage, convTotal, activeConversationId
-  //           onSelect: handleSelectConversation, onDelete: handleDeleteConversation
-  //           onRename: handleRename, onNew: handleNewChat, onPageChange
-  // 消息列表: messages, streamingText, sending, detailLoading, error, sources
-  // 输入区: onSend: handleSend, onStop: handleStop, sending, disabled
-
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 120px)', gap: 0 }}>
-      {/* 左侧会话栏 — 孙凤摇组件挂载位置 */}
-      <div style={{ width: 280, borderRight: '1px solid #f0f0f0', overflow: 'auto', flexShrink: 0 }}>
-        <div style={{ padding: 16, borderBottom: '1px solid #f0f0f0' }}>
-          <h3 style={{ margin: 0 }}>会话列表</h3>
-          <span style={{ fontSize: 12, color: '#888' }}>共 {convTotal} 个会话</span>
+    <div className="chat-layout" style={{ height: 'calc(100vh - 120px)' }}>
+      <ConversationSidebar
+        conversations={conversations}
+        activeConversationId={activeConversationId}
+        loading={convLoading}
+        hasMore={false}
+        collapsed={sidebarCollapsed}
+        onCreate={handleNewChat}
+        onSelect={handleSelectConversation}
+        onRename={handleRename}
+        onDelete={handleDeleteConversation}
+        onLoadMore={() => undefined}
+        onCollapse={setSidebarCollapsed}
+      />
+
+      <div className="chat-layout__main">
+        <div className="chat-layout__messages">
+          <MessageList
+            messages={uiMessages}
+            loading={detailLoading}
+            emptyStatus={emptyStatus}
+            onSelectQuestion={handleSend}
+          />
         </div>
-        {convLoading ? (
-          <div style={{ textAlign: 'center', padding: 40 }}><Spin /></div>
-        ) : (
-          <div style={{ padding: 8 }}>
-            {conversations.map((c) => (
-              <div
-                key={c.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '8px 12px',
-                  borderRadius: 6,
-                  background: c.id === activeConversationId ? '#e8f0fe' : 'transparent',
-                  marginBottom: 4,
-                  cursor: 'pointer',
-                }}
-              >
-                <div
-                  onClick={() => handleSelectConversation(c.id)}
-                  style={{ flex: 1, overflow: 'hidden' }}
-                >
-                  <div style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {c.title}
-                  </div>
-                  <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
-                    {c.recordCount} 条记录
-                  </div>
-                </div>
-                <span
-                  onClick={(e) => { e.stopPropagation(); handleDeleteConversation(c.id) }}
-                  style={{ color: '#ccc', fontSize: 16, cursor: 'pointer', padding: '0 4px' }}
-                  title="删除会话"
-                >
-                  ×
-                </span>
-              </div>
-            ))}
-            {conversations.length === 0 && (
-              <div style={{ textAlign: 'center', padding: 20, color: '#999' }}>暂无会话</div>
-            )}
+
+        {error && (
+          <div style={{ textAlign: 'center', color: '#e74c3c', padding: '8px 16px', fontSize: 13, flexShrink: 0 }}>
+            {error}
           </div>
         )}
-      </div>
 
-      {/* 右侧消息区 — 孙凤摇组件挂载位置 */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* 消息列表 */}
-        <div style={{ flex: 1, overflow: 'auto', padding: 24 }}>
-          {detailLoading ? (
-            <div style={{ textAlign: 'center', padding: 60 }}><Spin /></div>
-          ) : messages.length === 0 && !streamingText ? (
-            <div style={{ textAlign: 'center', padding: 60, color: '#888' }}>
-              <h2>智能问答</h2>
-              <p>向校园知识助手提问，获取基于官方资料的准确回答</p>
-            </div>
-          ) : (
-            <>
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  style={{
-                    marginBottom: 20,
-                    display: 'flex',
-                    justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                  }}
-                >
-                  <div
-                    style={{
-                      maxWidth: '70%',
-                      padding: '12px 16px',
-                      borderRadius: 12,
-                      background: msg.role === 'user' ? '#005bac' : '#f0f2f5',
-                      color: msg.role === 'user' ? '#fff' : '#333',
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                    }}
-                  >
-                    {msg.content}
-                    {msg.sources && msg.sources.length > 0 && (
-                      <div style={{ marginTop: 8, fontSize: 12, opacity: 0.7 }}>
-                        来源：{msg.sources.map((s) => s.title).join('、')}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {/* 流式生成中的临时气泡 */}
-              {streamingText && (
-                <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'flex-start' }}>
-                  <div style={{
-                    maxWidth: '70%', padding: '12px 16px', borderRadius: 12,
-                    background: '#f0f2f5', color: '#333', whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                  }}>
-                    {streamingText}
-                    <span style={{ animation: 'blink 1s infinite', color: '#005bac' }}>|</span>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-          {error && (
-            <div style={{ textAlign: 'center', color: '#e74c3c', padding: 12, fontSize: 13 }}>
-              {error}
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* 输入区 */}
-        <div style={{ borderTop: '1px solid #f0f0f0', padding: '16px 24px' }}>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <textarea
-              ref={inputRef}
-              placeholder="输入问题，Enter 发送，Shift+Enter 换行"
-              rows={2}
-              disabled={sending}
-              style={{
-                flex: 1, resize: 'none', borderRadius: 8, padding: '10px 14px',
-                border: '1px solid #d9d9d9', fontSize: 14, outline: 'none',
-                fontFamily: 'inherit',
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  const input = e.currentTarget
-                  handleSend(input.value)
-                  input.value = ''
-                }
-              }}
-            />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {sending ? (
-                <button
-                  onClick={handleStop}
-                  style={{
-                    padding: '8px 20px', borderRadius: 8, border: '1px solid #e74c3c',
-                    background: '#fff', color: '#e74c3c', cursor: 'pointer', fontSize: 14,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  停止
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    const input = inputRef.current
-                    if (input) {
-                      handleSend(input.value)
-                      input.value = ''
-                    }
-                  }}
-                  style={{
-                    padding: '8px 20px', borderRadius: 8, border: 'none',
-                    background: '#005bac', color: '#fff', cursor: 'pointer', fontSize: 14,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  发送
-                </button>
-              )}
-            </div>
-          </div>
+        <div className="chat-layout__input">
+          <ChatInput
+            value={inputValue}
+            disabled={false}
+            generating={sending}
+            placeholder="请输入你的问题"
+            maxLength={2000}
+            onChange={setInputValue}
+            onSend={() => handleSend(inputValue)}
+            onStop={handleStop}
+          />
         </div>
       </div>
     </div>
