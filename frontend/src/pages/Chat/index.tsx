@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import { message } from 'antd'
+import { message, Button } from 'antd'
 import { useAuthStore } from '../../store/auth'
 import {
   sendChatStream,
@@ -31,6 +31,16 @@ interface MessageItem {
   recordId?: number
 }
 
+/** 失败请求信息，用于重试 */
+interface FailedRequest {
+  question: string
+  conversationId: number | null
+}
+
+type SendOptions = {
+  retry?: boolean
+}
+
 export function ChatPage() {
   const { isLoggedIn } = useAuthStore()
 
@@ -51,6 +61,9 @@ export function ChatPage() {
 
   // 详情加载
   const [detailLoading, setDetailLoading] = useState(false)
+
+  // 失败请求（用于重试）
+  const [lastFailedRequest, setLastFailedRequest] = useState<FailedRequest | null>(null)
 
   // UI 状态
   const [inputValue, setInputValue] = useState('')
@@ -130,22 +143,29 @@ export function ChatPage() {
     setStreamingSources([])
     setError(null)
     setInputValue('')
+    setLastFailedRequest(null)
   }, [])
 
   // ===== 发送消息 =====
-  const handleSend = useCallback(async (question: string) => {
-    if (!question.trim() || sending) return
+  const handleSend = useCallback(async (explicitQuestion: string, options: SendOptions = {}) => {
+    if (!explicitQuestion.trim() || sending) return
     if (detailLoading || convLoading) return
 
     setError(null)
     setSending(true)
     setStreamingText('')
     setStreamingSources([])
-    setInputValue('')
 
-    // 添加用户消息
-    const userMsg: MessageItem = { role: 'user', content: question }
-    setMessages((prev) => [...prev, userMsg])
+    // 正常发送时清空输入框
+    if (!options.retry) {
+      setInputValue('')
+    }
+
+    // 非重试模式才追加用户消息（避免重复气泡）
+    if (!options.retry) {
+      const userMsg: MessageItem = { role: 'user', content: explicitQuestion }
+      setMessages((prev) => [...prev, userMsg])
+    }
 
     let fullAnswer = ''
     let sources: ChatSource[] = []
@@ -154,7 +174,7 @@ export function ChatPage() {
       (signal) =>
         sendChatStream(
           {
-            question,
+            question: explicitQuestion,
             conversationId: currentConversationId.current ?? undefined,
           },
           signal,
@@ -179,6 +199,7 @@ export function ChatPage() {
         onDone: (recordId: number) => {
           if (!mounted.current) return
           setSending(false)
+          setLastFailedRequest(null)
           // 添加助手消息，保存后端返回的 recordId
           setMessages((prev) => [
             ...prev,
@@ -196,6 +217,11 @@ export function ChatPage() {
           if (!mounted.current) return
           setSending(false)
           setError(msg)
+          // 保存失败请求以便重试
+          setLastFailedRequest({
+            question: explicitQuestion,
+            conversationId: currentConversationId.current ?? null,
+          })
           if (fullAnswer) {
             // 保留已收到的内容
             setMessages((prev) => [
@@ -221,6 +247,7 @@ export function ChatPage() {
     stopStream()
     setSending(false)
     setStreamingText('')
+    setLastFailedRequest(null)
     loadConversationDetail(id)
   }, [activeConversationId, stopStream, loadConversationDetail])
 
@@ -279,12 +306,28 @@ export function ChatPage() {
 
   // ===== 重新连接（网络错误重试） =====
   const handleRetry = useCallback(() => {
+    setError(null)
+
+    // 第一优先：存在失败请求时，真正重发问题
+    if (lastFailedRequest) {
+      // 如果有会话 ID，先确保 currentConversationId 指向失败时的会话
+      if (lastFailedRequest.conversationId != null) {
+        currentConversationId.current = lastFailedRequest.conversationId
+        setActiveConversationId(lastFailedRequest.conversationId)
+      }
+      void handleSend(lastFailedRequest.question, { retry: true })
+      return
+    }
+
+    // 第二优先：重新加载当前会话详情
     if (currentConversationId.current != null) {
       void loadConversationDetail(currentConversationId.current)
       return
     }
+
+    // 最后：重新加载会话列表
     void loadConversations(1, false)
-  }, [loadConversationDetail, loadConversations])
+  }, [lastFailedRequest, handleSend, loadConversationDetail, loadConversations])
 
   // ===== 转换为组件需要的消息格式 =====
   const uiMessages: ChatMessage[] = useMemo(() => {
@@ -366,6 +409,16 @@ export function ChatPage() {
           {error && (
             <div style={{ textAlign: 'center', color: '#e74c3c', padding: '8px 16px', fontSize: 13, flexShrink: 0 }}>
               {error}
+              {lastFailedRequest && (
+                <Button
+                  type="link"
+                  size="small"
+                  style={{ padding: '0 4px', height: 'auto', fontSize: 13 }}
+                  onClick={() => handleRetry()}
+                >
+                  点击重试
+                </Button>
+              )}
             </div>
           )}
 

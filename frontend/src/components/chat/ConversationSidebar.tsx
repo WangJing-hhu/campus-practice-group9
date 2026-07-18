@@ -183,7 +183,12 @@ export function ConversationSidebar({
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !isEditing) onSelect(conv.id)
+                    // 避免子按钮或输入框冒泡时误触发父级会话选择
+                    if (e.target !== e.currentTarget) return
+                    if ((e.key === 'Enter' || e.key === ' ') && !isEditing) {
+                      e.preventDefault()
+                      onSelect(conv.id)
+                    }
                   }}
                 >
                   <MessageOutlined className="chat-sidebar__item-icon" />
