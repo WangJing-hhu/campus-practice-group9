@@ -73,67 +73,16 @@
 }
 
 /* ===================================================
-   3. OfficialSourceFilter — 筛选栏
+   3. SourceCard 内嵌官方来源信息
    =================================================== */
 
-.official-source-filter {
-  padding: 10px 0;
-}
-
-.official-source-filter__checkbox {
-  font-size: 13px;
-}
-
-.official-source-filter__sites {
-  min-width: 140px;
-}
-
-.official-source-filter__category {
-  min-width: 120px;
-}
-
-.official-source-filter__clear {
-  font-size: 12px;
-}
-
-/* ===================================================
-   4. SourceCard 官网扩展行
-   =================================================== */
-
-/* 来源卡片内的官方来源信息行 */
 .chat-source__official {
   margin-top: 8px;
   padding-top: 8px;
   border-top: 1px solid #f0f0f0;
 }
 
-.chat-source__official-site {
-  font-size: 12px;
-  color: #595959;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  margin-bottom: 4px;
-}
-
-.chat-source__official-date {
-  font-size: 12px;
-  color: #8c8c8c;
-  display: flex;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
-.chat-source__official-link {
-  padding: 0;
-  font-size: 12px;
-  height: auto;
-  word-break: break-all;
-}
-
-/* 官方信息标签（内嵌在卡片头部的轻量标记） */
+/* 官网轻量标记（头部信息行内） */
 .chat-source__official-badge {
   display: inline-flex;
   align-items: center;
@@ -149,24 +98,7 @@
 }
 
 /* ===================================================
-   5. SourceList — 来源列表
-   =================================================== */
-
-.official-source-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.official-source-list__empty {
-  font-size: 13px;
-  color: #bfbfbf;
-  text-align: center;
-  padding: 12px 0;
-}
-
-/* ===================================================
-   6. 响应式适配
+   4. 响应式适配
    =================================================== */
 
 @media (max-width: 768px) {
@@ -178,9 +110,5 @@
   .chat-source__official {
     margin-top: 6px;
     padding-top: 6px;
-  }
-
-  .chat-source__official-link {
-    font-size: 11px;
   }
 }

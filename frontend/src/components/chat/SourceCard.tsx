@@ -130,19 +130,6 @@ export function SourceCard({ source, anchorId }: SourceCardProps) {
           />
         </div>
       )}
-
-      {/* 官网原文链接 */}
-      {source.sourceUrl && (
-        <a
-          href={source.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="chat-source__link"
-          onClick={(e) => e.stopPropagation()}
-        >
-          查看官网原文
-        </a>
-      )}
     </div>
   )
 }
