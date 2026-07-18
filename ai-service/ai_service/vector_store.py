@@ -1,4 +1,5 @@
 import json
+from difflib import SequenceMatcher
 import numpy as np
 import faiss
 import threading
@@ -47,21 +48,52 @@ class VectorStore:
             self._save()
             return len(vectors)
 
-    def search(self, query_vec: list[float], top_k: int) -> list[dict]:
+    def search(self, query_vec: list[float], top_k: int,
+               score_threshold: float = 0.70) -> list[dict]:
+        """检索 top_k 条结果，按 score 降序，低于阈值则过滤，并去除同一文档内高度重复的片段。"""
         with self.lock:
             if self.index.ntotal == 0:
                 return []
+
+            # 取更多的候选，给过滤留余量
+            fetch_k = min(top_k * 3, self.index.ntotal)
             mat = np.array([query_vec], dtype=np.float32)
-            scores, ids = self.index.search(mat, min(top_k, self.index.ntotal))
-            results = []
+            scores, ids = self.index.search(mat, fetch_k)
+
+            # 收集原始结果
+            raw = []
             for score, vid in zip(scores[0], ids[0]):
                 if vid < 0:
                     continue
                 for m in self.metadata:
                     if m.get("vector_id") == int(vid):
-                        results.append({**m, "score": float(score)})
+                        raw.append({**m, "score": float(score)})
                         break
-            return results
+
+            # 1. 阈值过滤
+            filtered = [r for r in raw if r["score"] >= score_threshold]
+
+            # 2. 按 score 降序（FAISS IndexFlatIP 已近似有序，再排一次保证）
+            filtered.sort(key=lambda r: r["score"], reverse=True)
+
+            # 3. 同文档内容去重：相同 doc_id 且文本相似度 > 0.85，只保留高分那条
+            deduped = []
+            for r in filtered:
+                is_dup = False
+                for kept in deduped:
+                    if r.get("doc_id") != kept.get("doc_id"):
+                        continue
+                    ratio = SequenceMatcher(
+                        None, r["content"], kept["content"]
+                    ).ratio()
+                    if ratio > 0.85:
+                        is_dup = True
+                        break
+                if not is_dup:
+                    deduped.append(r)
+
+            # 4. 截断到 top_k
+            return deduped[:top_k]
 
     def remove_by_doc_id(self, doc_id: int) -> int:
         with self.lock:

@@ -59,7 +59,7 @@ public class UserController {
     public Result<Void> delete(@PathVariable Long id) {
         UserContext.CurrentUser current = requireAdmin();
         if (id.equals(current.id())) {
-            throw new BizException(ResultCode.BAD_REQUEST, "??????????");
+            throw new BizException(ResultCode.BAD_REQUEST, "不能删除当前登录账号");
         }
         userService.logicalDelete(id);
         return Result.success(null);
@@ -68,7 +68,7 @@ public class UserController {
     private UserContext.CurrentUser requireAdmin() {
         UserContext.CurrentUser current = UserContext.get();
         if (current == null || !"admin".equals(current.role())) {
-            throw new BizException(ResultCode.FORBIDDEN, "??????????");
+            throw new BizException(ResultCode.FORBIDDEN, "仅管理员可执行此操作");
         }
         return current;
     }

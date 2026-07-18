@@ -37,7 +37,14 @@ class DocumentProcessor:
         # 额外允许的目录，测试代码可注入 fixtures 目录
         self.extra_allowed_dirs: list[Path] = []
 
-    def process(self, doc_id: int, path: str, title: str, callback_url: str | None = None):
+    def process(self, doc_id: int, path: str, title: str,
+                callback_url: str | None = None,
+                file_name: str | None = None,
+                source_url: str | None = None,
+                source_site: str | None = None,
+                category: str | None = None,
+                published_at: str | None = None,
+                crawled_at: str | None = None):
         _validate_path(path, self.extra_allowed_dirs)
         vector_store.remove_by_doc_id(doc_id)
 
@@ -71,8 +78,21 @@ class DocumentProcessor:
 
         self._callback(callback_url, doc_id, "INDEXING", "PROCESSING")
 
+        # file_name：优先用传入的值，否则从 path 提取
+        resolved_file_name = file_name or Path(path).name
         metas = [
-            {"doc_id": doc_id, "chunk_idx": i, "content": chunk, "title": title}
+            {
+                "doc_id": doc_id,
+                "chunk_idx": i,
+                "content": chunk,
+                "title": title,
+                "file_name": resolved_file_name,
+                "source_url": source_url or "",
+                "source_site": source_site or "",
+                "category": category or "",
+                "published_at": published_at or "",
+                "crawled_at": crawled_at or "",
+            }
             for i, chunk in enumerate(chunks)
         ]
         vector_store.add(all_vectors, metas)

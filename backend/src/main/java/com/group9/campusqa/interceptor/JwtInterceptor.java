@@ -23,7 +23,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         }
         String authorization = request.getHeader("Authorization");
         if (authorization == null || !authorization.startsWith("Bearer ")) {
-            throw new BizException(ResultCode.UNAUTHORIZED, "????Token??");
+            throw new BizException(ResultCode.UNAUTHORIZED, "未登录或Token缺失");
         }
         try {
             Claims claims = jwtUtil.parse(authorization.substring(7));
@@ -33,7 +33,7 @@ public class JwtInterceptor implements HandlerInterceptor {
                     claims.get("role", String.class)));
             return true;
         } catch (Exception e) {
-            throw new BizException(ResultCode.UNAUTHORIZED, "Token??????");
+            throw new BizException(ResultCode.UNAUTHORIZED, "Token无效或已过期");
         }
     }
 
