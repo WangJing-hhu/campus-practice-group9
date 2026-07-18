@@ -62,13 +62,15 @@ public class RagServiceImpl implements RagService {
         context.question = request.getQuestion();
 
         // 1. 获取或创建会话
-        if (request.getConversationId() == null) {
-            QaConversation conversation = chatHistoryService.createConversation(userId);
-            context.conversationId = conversation.getId();
-        } else {
-            context.conversationId = request.getConversationId();
-        }
-
+       // 在 RagServiceImpl.java 的 prepareContext 方法中
+    if (request.getConversationId() != null) {
+    QaConversation conversation = chatHistoryService.getById(request.getConversationId());
+    // 必须加上这个判断
+    if (conversation == null || !conversation.getUserId().equals(userId)) {
+        throw new BizException(403, "无权访问此会话");
+    }
+    context.conversationId = request.getConversationId();
+}
         // 2. 初始化一条 PENDING 状态的聊天记录
         QaRecord record = new QaRecord();
         record.setUserId(userId);
