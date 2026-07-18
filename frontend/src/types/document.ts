@@ -21,6 +21,7 @@ export const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB
 export interface DocumentItem {
   id: number
   title: string
+  fileName?: string
   originalName: string
   storedName: string
   fileType: string
@@ -28,6 +29,15 @@ export interface DocumentItem {
   chunkCount: number
   status: DocStatus
   processStage: ProcessStage
+  sourceUrl?: string
+  sourceSite?: string
+  sourceDomain?: string
+  category?: string
+  publishedAt?: string
+  crawledAt?: string
+  sourceUpdatedAt?: string
+  reviewStatus?: string
+  validityStatus?: string
   errorMessage: string | null
   createUserId: number
   createTime: string
@@ -63,6 +73,16 @@ export interface SearchResultItem {
   docId: number
   chunkIdx: number
   title: string
+  fileName?: string
+  sourceUrl?: string
+  sourceSite?: string
+  sourceDomain?: string
+  category?: string
+  publishedAt?: string
+  crawledAt?: string
+  sourceUpdatedAt?: string
+  reviewStatus?: string
+  validityStatus?: string
   score: number
 }
 
