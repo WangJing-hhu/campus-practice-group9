@@ -11,10 +11,19 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     public WebMvcConfig(JwtInterceptor jwtInterceptor) { this.jwtInterceptor = jwtInterceptor; }
 
+    
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/user/login", "/api/user/register", "/api/health");
+                .excludePathPatterns(
+                        "/api/user/login", 
+                        "/api/user/register",
+                        "/api/health",
+                        // 假设原来的登录放行
+                        "/api/doc/callback",           // 🌟 必须放行 callback
+                        "/api/doc/*/preview",          // 🌟 必须放行 preview
+                        "/api/doc/*/download"          // 🌟 必须放行 download
+                );
     }
 }
