@@ -27,10 +27,10 @@ public class AuthServiceImpl implements AuthService {
     public LoginVO login(LoginDTO dto) {
         User user = userService.findByUsername(dto.getUsername());
         if (user == null || !passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
-            throw new BizException(ResultCode.UNAUTHORIZED, "????????");
+            throw new BizException(ResultCode.UNAUTHORIZED, "用户名或密码错误");
         }
         if (user.getStatus() == 0) {
-            throw new BizException(ResultCode.FORBIDDEN, "??????");
+            throw new BizException(ResultCode.FORBIDDEN, "账号已被停用");
         }
         return new LoginVO(jwtUtil.generate(user), user.getId(), user.getUsername(), user.getRole());
     }

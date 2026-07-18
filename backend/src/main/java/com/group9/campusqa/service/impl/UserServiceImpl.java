@@ -70,12 +70,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         var usernameQuery = lambdaQuery().eq(User::getUsername, username);
         if (excludedId != null) usernameQuery.ne(User::getId, excludedId);
         if (usernameQuery.count() > 0) {
-            throw new BizException(ResultCode.CONFLICT, "??????");
+            throw new BizException(ResultCode.CONFLICT, "用户名已存在");
         }
         var emailQuery = lambdaQuery().eq(User::getEmail, email);
         if (excludedId != null) emailQuery.ne(User::getId, excludedId);
         if (emailQuery.count() > 0) {
-            throw new BizException(ResultCode.CONFLICT, "?????");
+            throw new BizException(ResultCode.CONFLICT, "邮箱已注册");
         }
     }
 
@@ -100,7 +100,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = requireUser(id);
         String email = dto.getEmail().trim();
         long emailCount = lambdaQuery().eq(User::getEmail, email).ne(User::getId, id).count();
-        if (emailCount > 0) throw new BizException(ResultCode.CONFLICT, "?????");
+        if (emailCount > 0) throw new BizException(ResultCode.CONFLICT, "邮箱已注册");
         user.setEmail(email);
         user.setRole(dto.getRole());
         updateById(user);
@@ -111,7 +111,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Transactional
     public UserVO updateStatus(Long id, Integer status, Long currentUserId) {
         if (id.equals(currentUserId) && status == 0) {
-            throw new BizException(ResultCode.BAD_REQUEST, "??????????");
+            throw new BizException(ResultCode.BAD_REQUEST, "不能停用当前登录账号");
         }
         User user = requireUser(id);
         user.setStatus(status);
@@ -127,7 +127,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     private User requireUser(Long id) {
         User user = getById(id);
-        if (user == null) throw new BizException(ResultCode.NOT_FOUND, "?????");
+        if (user == null) throw new BizException(ResultCode.NOT_FOUND, "用户不存在");
         return user;
     }
 }
