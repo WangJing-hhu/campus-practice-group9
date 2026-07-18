@@ -32,8 +32,8 @@ public class DocumentController {
     private final DocumentProcessService processService;
     private final FileStorageUtil fileStorageUtil;
 
-    @Value("${campus-qa.ai.callback-token}")
-    private String expectedToken;
+   @Value("${campus-qa.ai.callback-token:day4-internal-callback-token}")
+private String expectedToken;
 
     public DocumentController(
             DocumentService documentService,

@@ -10,19 +10,24 @@ import com.group9.campusqa.mapper.KbDocumentMapper;
 import com.group9.campusqa.service.DocumentProcessService;
 import com.group9.campusqa.vo.AiSearchResultVO;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class DocumentProcessServiceImpl implements DocumentProcessService {
 
+    private static final Logger log = LoggerFactory.getLogger(DocumentProcessServiceImpl.class);
+
     private final KbDocumentMapper mapper;
     private final AiClient aiClient;
 
-    @Value("${campus-qa.ai.callback-url:http://localhost:8081/api/doc/callback}") // 建议提取到配置
+    @Value("${campus-qa.ai.callback-url:http://localhost:8081/api/doc/callback}") 
     private String callbackUrl;
 
     public DocumentProcessServiceImpl(KbDocumentMapper mapper, AiClient aiClient){
@@ -41,9 +46,13 @@ public class DocumentProcessServiceImpl implements DocumentProcessService {
         doc.setProcessStage("EXTRACTING"); // 进入提取阶段
         mapper.updateById(doc);
 
-       AiProcessRequest request = new AiProcessRequest();
+        AiProcessRequest request = new AiProcessRequest();
         request.setDocId(doc.getId());
         request.setPath(doc.getFilePath());
+        
+        // 🌟 修复：补齐缺失的标题和回调地址
+        request.setTitle(doc.getTitle());
+        request.setCallbackUrl(callbackUrl);
         
         // 🌟 把文件原始名和新增的官网元数据一并传给 Python
         request.setFileName(doc.getOriginalName()); 
@@ -55,21 +64,20 @@ public class DocumentProcessServiceImpl implements DocumentProcessService {
         request.setPublishedAt(doc.getPublishedAt() != null ? doc.getPublishedAt().toString() : null);
         request.setCrawledAt(doc.getCrawledAt() != null ? doc.getCrawledAt().toString() : null);
 
-        aiClient.process(request);
         try {
-            // 调用 Python (此过程可能较长，Python通过callback通知进度)
+            // 🌟 修复：去掉了外面重复的 aiClient.process(request)，保留 try 块内的正常调用
             AiProcessResponse response = aiClient.process(request);
 
-            doc.setStatus(response.getStatus());
-            doc.setChunkCount(response.getChunkCount());
-            doc.setProcessStage("DONE"); // 成功
-            mapper.updateById(doc);
+            if (response != null) {
+                doc.setStatus(response.getStatus());
+                doc.setChunkCount(response.getChunkCount());
+                doc.setProcessStage("DONE"); // 成功
+                mapper.updateById(doc);
+            }
 
         } catch(Exception e){
-            // 出现异常，打印堆栈
-            // 组长要求：异常均由 Java 将 status 置为 FAILED
-            // TODO: 请加上日志打印 e.g., log.error("...", e);
-            System.err.println("处理文档异常: " + e.getMessage()); 
+            // 🌟 修复：使用规范的日志打印，替换掉 System.err
+            log.error("处理文档异常, docId: {}", docId, e);
             
             doc.setStatus("FAILED");
             // 注意：FAILED 不是 processStage，如果失败，stage可以保留在失败那一刻
@@ -79,15 +87,30 @@ public class DocumentProcessServiceImpl implements DocumentProcessService {
     }
 
     /**
-     * 新增：调用 AI 服务进行语义检索
+     * 调用 AI 服务进行语义检索
      */
-    // 假设你在接口里定义了这个方法
+    @Override
     public List<AiSearchResultVO> semanticSearch(String question, Integer topK) {
-        AiSearchRequest request = new AiSearchRequest();
-        request.setQuestion(question);
-        request.setTopK(topK != null ? topK : 5);
-        
-        AiSearchResponse response = aiClient.search(request);
-        return response.getResults(); 
+        AiSearchRequest req = new AiSearchRequest();
+        req.setQuestion(question);
+        req.setTopK(topK);
+        // 设置默认阈值参数（匹配陆奥琪的测试）
+        req.setScoreThreshold(0.70); 
+
+        // 1. 获取 Python 端的返回结果
+        AiSearchResponse response = aiClient.search(req);
+        List<AiSearchResponse.SearchResult> results = response != null ? response.getResults() : null;
+
+        // 2. 手动将 SearchResult 转换为 AiSearchResultVO
+        List<AiSearchResultVO> vos = new ArrayList<>();
+        if (results != null) {
+            for (AiSearchResponse.SearchResult res : results) {
+                AiSearchResultVO vo = new AiSearchResultVO();
+                // 自动把两个类里同名的字段（比如 docId, content, score, fileName 等）拷贝过去
+                org.springframework.beans.BeanUtils.copyProperties(res, vo);
+                vos.add(vo);
+            }
+        }
+        return vos;
     }
 }
