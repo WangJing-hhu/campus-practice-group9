@@ -4,3 +4,4 @@ __pycache__/
 data/faiss.index
 data/metadata.json
 .pytest_cache/
+storage/uploads/
