@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { Typography, Button } from 'antd'
 import { DownOutlined, UpOutlined, FileTextOutlined, GlobalOutlined } from '@ant-design/icons'
 import type { ChatSource } from '../../types/chat'
+import { OfficialSourceTag } from '../document/OfficialSourceTag'
+import { OfficialSourceDetail } from '../document/OfficialSourceDetail'
+import '../../styles/official-source.css'
 
 const { Text, Paragraph } = Typography
 
@@ -110,17 +113,27 @@ export function SourceCard({ source, anchorId }: SourceCardProps) {
         </div>
       )}
 
-      {/* 官网原文链接 */}
-      {source.sourceUrl && (
-        <a
-          href={source.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="chat-source__link"
-          onClick={(e) => e.stopPropagation()}
-        >
-          查看官网原文
-        </a>
+      {/* 官网来源详情（仅当存在官网字段时显示，兼容新旧字段） */}
+      {(source.sourceUrl || source.sourceSite || source.sourceDomain || source.category
+        || source.publishedAt || source.sourceUpdatedAt || source.crawledAt) && (
+        <div className="chat-source__official" onClick={(e) => e.stopPropagation()}>
+          <OfficialSourceTag
+            sourceUrl={source.sourceUrl}
+            sourceSite={source.sourceSite}
+            sourceDomain={source.sourceDomain}
+            category={source.category}
+            validityStatus={source.validityStatus}
+          />
+          <OfficialSourceDetail
+            sourceSite={source.sourceSite}
+            sourceDomain={source.sourceDomain}
+            category={source.category}
+            publishedAt={source.publishedAt}
+            sourceUpdatedAt={source.sourceUpdatedAt}
+            crawledAt={source.crawledAt}
+            sourceUrl={source.sourceUrl}
+          />
+        </div>
       )}
     </div>
   )
