@@ -356,17 +356,16 @@ export function ChatPage() {
                     }}
                   >
                     {msg.content}
-                    {msg.sources && msg.sources.length > 0 && (
-                      <div style={{ marginTop: 8, fontSize: 12, opacity: 0.7 }}>
-                        来源：{msg.sources.map((s) => s.title).join('、')}
-                      </div>
-                    )}
                   </div>
+                  {/* 来源引用卡片（仅助手消息展示，放在气泡下方） */}
+                  {msg.role === 'assistant' && msg.sources && msg.sources.length > 0 && (
+                    <SourceRefs sources={msg.sources} />
+                  )}
                 </div>
               ))}
               {/* 流式生成中的临时气泡 */}
               {streamingText && (
-                <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'flex-start' }}>
+                <div style={{ marginBottom: 20, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                   <div style={{
                     maxWidth: '70%', padding: '12px 16px', borderRadius: 12,
                     background: '#f0f2f5', color: '#333', whiteSpace: 'pre-wrap',
@@ -375,6 +374,9 @@ export function ChatPage() {
                     {streamingText}
                     <span style={{ animation: 'blink 1s infinite', color: '#005bac' }}>|</span>
                   </div>
+                  {streamingSources.length > 0 && (
+                    <SourceRefs sources={streamingSources} />
+                  )}
                 </div>
               )}
             </>
@@ -443,6 +445,181 @@ export function ChatPage() {
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+// ===== 来源引用展示组件（内联，不依赖外部组件文件） =====
+// 当 杨牧涵(4.2) 的 SourceList/SourceCard 组件就绪后，可替换为导入
+
+/** 截取文本前 N 字符（按完整单词截断） */
+function truncateText(text: string | undefined, maxLen = 180): string {
+  if (!text) return ''
+  if (text.length <= maxLen) return text
+  return text.slice(0, maxLen).replace(/\s+\S*$/, '') + '…'
+}
+
+/** 格式化日期为 yyyy-MM-dd */
+function fmtDate(d: string | undefined): string {
+  if (!d) return ''
+  try {
+    const date = new Date(d)
+    if (isNaN(date.getTime())) return d
+    const y = date.getFullYear()
+    const m = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  } catch {
+    return d
+  }
+}
+
+/** 相似度分数 → 百分比字符串 */
+function fmtScore(s: number): string {
+  if (s == null || isNaN(s)) return ''
+  return `${(s * 100).toFixed(1)}%`
+}
+
+/** 单条来源引用卡片 */
+function SourceRefCard({ source }: { source: ChatSource }) {
+  const {
+    index,
+    title,
+    fileName,
+    sourceUrl,
+    sourceSite,
+    category,
+    publishedAt,
+    crawledAt,
+    score,
+    content,
+  } = source
+
+  // 来源名称：优先 sourceSite，其次 category
+  const sourceName = sourceSite || category || ''
+  // 日期：优先 publishedAt，其次 crawledAt
+  const displayDate = fmtDate(publishedAt || crawledAt)
+  // 是否官方来源
+  const isOfficial = !!(sourceUrl && /^https?:\/\/.+/.test(sourceUrl))
+  // 摘要
+  const summary = truncateText(content, 180)
+
+  return (
+    <div
+      style={{
+        border: '1px solid #e8e8e8',
+        borderRadius: 8,
+        padding: '12px 14px',
+        marginBottom: 8,
+        background: '#fafafa',
+        fontSize: 13,
+      }}
+    >
+      {/* 标题行：编号 + 标题 + 官方标记 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          width: 20, height: 20, fontSize: 11, fontWeight: 700,
+          color: '#fff', background: '#005bac', borderRadius: '50%', flexShrink: 0,
+        }}>
+          [{index ?? '?'}]
+        </span>
+        <span style={{
+          fontSize: 14, fontWeight: 600, color: '#1d1d1d',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
+        }} title={title || fileName}>
+          {title || fileName || '未知文档'}
+        </span>
+        {isOfficial && (
+          <span style={{
+            display: 'inline-block', padding: '0 6px', fontSize: 11, fontWeight: 600,
+            lineHeight: '20px', color: '#005bac', background: '#e8f0fe',
+            borderRadius: 3, whiteSpace: 'nowrap', flexShrink: 0,
+          }}>
+            官方
+          </span>
+        )}
+      </div>
+
+      {/* 元数据行 */}
+      {(sourceName || displayDate || score != null) && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+          fontSize: 12, color: '#888', marginBottom: summary ? 6 : 0,
+        }}>
+          {sourceName && (
+            <span style={{ color: '#555', fontWeight: 500 }}>{sourceName}</span>
+          )}
+          {category && !sourceSite && (
+            <span style={{
+              padding: '0 5px', background: '#f5f5f5', borderRadius: 3, fontSize: 11,
+            }}>
+              {category}
+            </span>
+          )}
+          {displayDate && <span style={{ color: '#aaa' }}>{displayDate}</span>}
+          {score != null && !isNaN(score) && (
+            <span style={{ color: '#005bac', fontWeight: 500 }}>相关度 {fmtScore(score)}</span>
+          )}
+        </div>
+      )}
+
+      {/* 摘要（截取 180 字符） */}
+      {summary && (
+        <div style={{
+          fontSize: 12, color: '#555', lineHeight: 1.7, marginBottom: 8,
+          display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+        }}>
+          {summary}
+        </div>
+      )}
+
+      {/* 底部链接 */}
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        {isOfficial ? (
+          <a
+            href={sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontSize: 12, color: '#005bac', textDecoration: 'none' }}
+            title={`查看原文：${sourceUrl}`}
+          >
+            📎 查看原文 &#8599;
+          </a>
+        ) : (
+          <span style={{ fontSize: 12, color: '#bfbfbf' }}>
+            用户上传文档
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/** 来源引用列表 */
+function SourceRefs({ sources }: { sources: ChatSource[] }) {
+  if (!sources || sources.length === 0) return null
+
+  const sorted = [...sources].sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
+  const officialCount = sorted.filter(
+    (s) => s.sourceUrl && /^https?:\/\/.+/.test(s.sourceUrl),
+  ).length
+
+  return (
+    <div style={{ marginTop: 4, maxWidth: '70%' }}>
+      {/* 头部 */}
+      <div style={{
+        fontSize: 12, fontWeight: 600, color: '#888',
+        marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6,
+      }}>
+        <span>📚</span>
+        <span>参考来源（共 {sorted.length} 条{ officialCount > 0 ? `，官方来源 ${officialCount} 条` : '' }）</span>
+      </div>
+      {/* 卡片列表 */}
+      {sorted.map((s) => (
+        <SourceRefCard key={`${s.docId}-${s.index}`} source={s} />
+      ))}
     </div>
   )
 }
