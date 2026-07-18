@@ -1,0 +1,685 @@
+/* ===================================================
+   聊天模块 — 布局与组件样式
+   使用 chat- 前缀，保持与项目风格一致
+   主色 #005BAC，边框 #f0f0f0
+   =================================================== */
+
+/* ===================================================
+   1. 聊天页整体布局
+   =================================================== */
+
+/* 聊天页 flex 容器（供 Chat 页面使用） */
+.chat-layout {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  background: #fff;
+}
+
+/* 右侧主区域 */
+.chat-layout__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* 消息滚动区 */
+.chat-layout__messages {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 输入区 */
+.chat-layout__input {
+  flex-shrink: 0;
+}
+
+/* ===================================================
+   2. 会话侧栏 ConversationSidebar
+   =================================================== */
+
+.chat-sidebar {
+  width: 280px;
+  min-width: 280px;
+  border-right: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  background: #fafafa;
+  transition: width 0.2s ease;
+}
+
+/* 收起状态 */
+.chat-sidebar--collapsed {
+  width: 48px;
+  min-width: 48px;
+  align-items: center;
+  padding-top: 12px;
+}
+
+.chat-sidebar__toggle-btn {
+  font-size: 16px;
+}
+
+/* ---- 头部 ---- */
+.chat-sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.chat-sidebar__title {
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.chat-sidebar__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chat-sidebar__collapse-btn {
+  display: none;
+}
+
+/* ---- 列表滚动区 ---- */
+.chat-sidebar__list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ---- 加载中 ---- */
+.chat-sidebar__loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 16px;
+}
+
+/* ---- 空列表 ---- */
+.chat-sidebar__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 16px;
+  text-align: center;
+}
+
+/* ---- 列表项 ---- */
+.chat-sidebar__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f5f5f5;
+  transition: background 0.15s;
+}
+
+.chat-sidebar__item:hover {
+  background: #f0f5ff;
+}
+
+.chat-sidebar__item--active {
+  background: #e6f0ff;
+  border-left: 3px solid #005BAC;
+  padding-left: 13px;
+}
+
+.chat-sidebar__item--active:hover {
+  background: #e6f0ff;
+}
+
+.chat-sidebar__item-icon {
+  margin-top: 2px;
+  color: #8c8c8c;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.chat-sidebar__item--active .chat-sidebar__item-icon {
+  color: #005BAC;
+}
+
+.chat-sidebar__item-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chat-sidebar__item-title {
+  font-size: 13px;
+  line-height: 1.4;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.chat-sidebar__item--active .chat-sidebar__item-title {
+  color: #005BAC;
+  font-weight: 500;
+}
+
+.chat-sidebar__item-time {
+  font-size: 11px;
+}
+
+.chat-sidebar__item-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.chat-sidebar__item:hover .chat-sidebar__item-actions,
+.chat-sidebar__item--active .chat-sidebar__item-actions {
+  opacity: 1;
+}
+
+/* ---- 底部加载更多 ---- */
+.chat-sidebar__footer {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* ===================================================
+   3. 消息列表 MessageList
+   =================================================== */
+
+.chat-messages {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: auto;
+  position: relative;
+}
+
+.chat-messages__list {
+  padding: 20px 24px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* ---- 加载中 ---- */
+.chat-messages__loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+/* ---- 空状态 ---- */
+.chat-messages__empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 24px;
+}
+
+/* ---- 回到底部按钮 ---- */
+.chat-messages__scroll-btn {
+  position: sticky;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #d9d9d9;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #595959;
+  font-size: 14px;
+  z-index: 5;
+  transition: box-shadow 0.2s;
+}
+
+.chat-messages__scroll-btn:hover {
+  box-shadow: 0 4px 12px rgba(0, 91, 172, 0.2);
+  color: #005BAC;
+  border-color: #005BAC;
+}
+
+/* ===================================================
+   4. 消息气泡 ChatBubble
+   =================================================== */
+
+/* ---- 消息行 ---- */
+.chat-bubble-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.chat-bubble-row--user {
+  justify-content: flex-end;
+}
+
+.chat-bubble-row--assistant {
+  justify-content: flex-start;
+}
+
+/* ---- 头像 ---- */
+.chat-bubble__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.chat-bubble__avatar--user {
+  background: #e6f0ff;
+  color: #005BAC;
+}
+
+.chat-bubble__avatar--assistant {
+  background: #f0f5ff;
+  color: #005BAC;
+}
+
+.chat-bubble__avatar--error {
+  background: #fff2f0;
+  color: #ff4d4f;
+}
+
+/* ---- 气泡体 ---- */
+.chat-bubble__body {
+  max-width: 75%;
+  min-width: 0;
+}
+
+/* 用户消息右对齐时，body 内容靠右 */
+.chat-bubble-row--user .chat-bubble__body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* ---- 气泡 ---- */
+.chat-bubble {
+  padding: 10px 16px;
+  border-radius: 12px;
+  line-height: 1.7;
+  font-size: 14px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.chat-bubble--user {
+  background: #e6f0ff;
+  color: #1a1a1a;
+  border-top-right-radius: 4px;
+}
+
+.chat-bubble--assistant {
+  background: #f5f5f5;
+  color: #1a1a1a;
+  border-top-left-radius: 4px;
+  border: 1px solid #eeeeee;
+}
+
+.chat-bubble--error {
+  background: #fff2f0;
+  border-color: #ffccc7;
+}
+
+.chat-bubble__text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* ---- 流式光标 ---- */
+.chat-bubble__cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  background: #005BAC;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  animation: chat-cursor-blink 0.8s infinite;
+}
+
+@keyframes chat-cursor-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ---- 来源区域 ---- */
+.chat-bubble__sources {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-bubble__sources-label {
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+/* ===================================================
+   5. 来源卡片 SourceCard
+   =================================================== */
+
+.chat-source {
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 10px 14px;
+  background: #fff;
+  transition: border-color 0.2s;
+}
+
+.chat-source:hover {
+  border-color: #b4d5ff;
+}
+
+/* ---- 头部信息行 ---- */
+.chat-source__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.chat-source__index {
+  font-weight: 600;
+  font-size: 13px;
+  color: #005BAC;
+  flex-shrink: 0;
+}
+
+.chat-source__file-icon {
+  font-size: 12px;
+  color: #8c8c8c;
+  flex-shrink: 0;
+}
+
+.chat-source__title {
+  font-size: 13px;
+  max-width: 200px;
+}
+
+.chat-source__filename {
+  font-size: 12px;
+  max-width: 160px;
+}
+
+.chat-source__score {
+  margin-left: auto;
+  font-size: 12px;
+  color: #52c41a;
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  border-radius: 4px;
+  padding: 0 6px;
+  line-height: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ---- 内容区 ---- */
+.chat-source__body {
+  position: relative;
+}
+
+.chat-source__content {
+  font-size: 13px;
+  color: #595959;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  margin-bottom: 0;
+}
+
+.chat-source__toggle {
+  padding: 0;
+  font-size: 12px;
+  height: auto;
+  margin-top: 4px;
+}
+
+/* ===================================================
+   6. 聊天输入区 ChatInput
+   =================================================== */
+
+.chat-input {
+  padding: 12px 24px;
+  border-top: 1px solid #f0f0f0;
+  background: #fff;
+}
+
+.chat-input__box {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.chat-input__textarea {
+  flex: 1;
+  min-width: 0;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: none;
+}
+
+.chat-input__textarea:focus {
+  border-color: #005BAC;
+  box-shadow: 0 0 0 2px rgba(0, 91, 172, 0.1);
+}
+
+.chat-input__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.chat-input__count {
+  font-size: 11px;
+  color: #bfbfbf;
+  white-space: nowrap;
+}
+
+.chat-input__send-btn,
+.chat-input__stop-btn {
+  white-space: nowrap;
+}
+
+/* ===================================================
+   7. 空状态 ChatEmpty
+   =================================================== */
+
+.chat-empty {
+  text-align: center;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.chat-empty__icon-wrap {
+  margin-bottom: 20px;
+}
+
+.chat-empty__icon {
+  font-size: 56px;
+  color: #b4d5ff;
+}
+
+.chat-empty__icon--error {
+  color: #ffccc7;
+}
+
+.chat-empty__title {
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.chat-empty__desc {
+  font-size: 14px;
+  display: block;
+  margin-bottom: 28px;
+}
+
+/* ---- 示例问题 ---- */
+.chat-empty__questions {
+  margin-top: 8px;
+}
+
+.chat-empty__questions-label {
+  font-size: 13px;
+  display: block;
+  margin-bottom: 14px;
+}
+
+.chat-empty__questions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.chat-empty__question-btn {
+  border-radius: 20px;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.chat-empty__question-btn:hover {
+  color: #005BAC;
+  border-color: #005BAC;
+}
+
+/* ===================================================
+   8. 响应式适配
+   =================================================== */
+
+/* ≤ 900px：侧栏变窄 */
+@media (max-width: 900px) {
+  .chat-sidebar {
+    width: 240px;
+    min-width: 240px;
+  }
+
+  .chat-sidebar__header {
+    padding: 12px;
+  }
+
+  .chat-sidebar__item {
+    padding: 10px 12px;
+  }
+
+  .chat-messages__list {
+    padding: 16px;
+  }
+
+  .chat-input {
+    padding: 10px 16px;
+  }
+
+  .chat-bubble__body {
+    max-width: 85%;
+  }
+}
+
+/* ≤ 768px：侧栏可隐藏（通过 collapsed prop 控制） */
+@media (max-width: 768px) {
+  .chat-sidebar__collapse-btn {
+    display: inline-flex;
+  }
+
+  .chat-layout {
+    position: relative;
+  }
+
+  /* 展开的侧栏在窄屏下使用绝对定位覆盖 */
+  .chat-sidebar:not(.chat-sidebar--collapsed) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 10;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .chat-messages__list {
+    padding: 12px;
+    max-width: 100%;
+  }
+
+  .chat-input {
+    padding: 8px 12px;
+  }
+
+  .chat-input__box {
+    max-width: 100%;
+  }
+
+  .chat-bubble__body {
+    max-width: 88%;
+  }
+}
+
+/* ≤ 480px：进一步紧凑 */
+@media (max-width: 480px) {
+  .chat-bubble__avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+
+  .chat-bubble__body {
+    max-width: 85%;
+  }
+
+  .chat-bubble {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .chat-bubble-row {
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .chat-source__header {
+    gap: 4px;
+  }
+
+  .chat-source {
+    padding: 8px 10px;
+  }
+}
