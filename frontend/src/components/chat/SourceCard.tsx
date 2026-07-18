@@ -113,19 +113,24 @@ export function SourceCard({ source, anchorId }: SourceCardProps) {
         </div>
       )}
 
-      {/* 官网来源详情（仅当存在额外官网字段时显示） */}
-      {(source.sourceUrl || source.sourceDomain || source.category || source.sourceUpdatedAt) && (
+      {/* 官网来源详情（仅当存在官网字段时显示，兼容新旧字段） */}
+      {(source.sourceUrl || source.sourceSite || source.sourceDomain || source.category
+        || source.publishedAt || source.sourceUpdatedAt || source.crawledAt) && (
         <div className="chat-source__official" onClick={(e) => e.stopPropagation()}>
           <OfficialSourceTag
             sourceUrl={source.sourceUrl}
+            sourceSite={source.sourceSite}
             sourceDomain={source.sourceDomain}
             category={source.category}
             validityStatus={source.validityStatus}
           />
           <OfficialSourceDetail
+            sourceSite={source.sourceSite}
             sourceDomain={source.sourceDomain}
             category={source.category}
+            publishedAt={source.publishedAt}
             sourceUpdatedAt={source.sourceUpdatedAt}
+            crawledAt={source.crawledAt}
             sourceUrl={source.sourceUrl}
           />
         </div>

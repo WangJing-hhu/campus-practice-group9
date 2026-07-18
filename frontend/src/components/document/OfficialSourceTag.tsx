@@ -34,7 +34,7 @@ export function OfficialSourceTag({
   if (!site && !url) return null
 
   return (
-    <span className="official-source-tags" style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+    <span className="official-source-tags">
       <Tag icon={<LinkOutlined />} color="blue" className="official-source-tag">
         {site ? `官方来源 · ${site}` : '官方来源'}
       </Tag>
