@@ -2,9 +2,6 @@ import { useState } from 'react'
 import { Typography, Button } from 'antd'
 import { DownOutlined, UpOutlined, FileTextOutlined, GlobalOutlined } from '@ant-design/icons'
 import type { ChatSource } from '../../types/chat'
-import { OfficialSourceTag } from '../document/OfficialSourceTag'
-import { OfficialSourceDetail } from '../document/OfficialSourceDetail'
-import '../../styles/official-source.css'
 
 const { Text, Paragraph } = Typography
 
@@ -124,24 +121,6 @@ export function SourceCard({ source, anchorId }: SourceCardProps) {
         >
           查看官网原文
         </a>
-      )}
-
-      {/* 官网来源详情（仅当存在官网字段时显示） */}
-      {(source.sourceUrl || source.sourceDomain || source.category || source.sourceUpdatedAt) && (
-        <div className="chat-source__official" onClick={(e) => e.stopPropagation()}>
-          <OfficialSourceTag
-            sourceUrl={source.sourceUrl}
-            sourceDomain={source.sourceDomain}
-            category={source.category}
-            validityStatus={source.validityStatus}
-          />
-          <OfficialSourceDetail
-            sourceDomain={source.sourceDomain}
-            category={source.category}
-            sourceUpdatedAt={source.sourceUpdatedAt}
-            sourceUrl={source.sourceUrl}
-          />
-        </div>
       )}
     </div>
   )
