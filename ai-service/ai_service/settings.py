@@ -19,7 +19,6 @@ class Settings:
         self.chunk_size: int = 500
         self.chunk_overlap: int = 50
         self.top_k_default: int = 5
-        self.score_threshold: float = 0.70
         self.data_dir: str = "data"
         self.upload_dir: str = os.getenv("UPLOAD_DIR", "../storage/uploads")
         self.callback_token: str = os.getenv("AI_CALLBACK_TOKEN", "day4-internal-callback-token")

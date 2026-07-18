@@ -59,8 +59,11 @@ curl http://localhost:8000/health
 
 ### POST /search 返回字段
 
-每条结果包含：`doc_id`、`title`、`file_name`、`chunk_idx`、`content`、`score`。
+每条结果包含：`doc_id`、`title`、`file_name`、`chunk_idx`、`content`、`score`、
+`source_url`、`source_site`、`category`、`published_at`、`crawled_at`。
+
 结果按 `score` 降序；同一文档高度重复的片段自动去重；不足 `top_k` 条时按实际数量返回。
+普通文档（无来源元数据）的 `source_*` 字段返回空字符串。
 
 ### GET /health 返回字段
 
