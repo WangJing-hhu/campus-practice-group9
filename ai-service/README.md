@@ -36,7 +36,37 @@ curl http://localhost:8000/health
 
 | 方法 | 路径 | 认证 | 说明 |
 |------|------|------|------|
-| GET | `/health` | 无 | 健康检查 |
+| GET | `/health` | 无 | 健康检查，返回 `status`、`model`、`index_size`、`key_configured` |
 | POST | `/process` | `X-Internal-Token` | 文档处理流水线 |
-| POST | `/search` | `X-Internal-Token` | 语义检索 top-k |
+| POST | `/search` | `X-Internal-Token` | 语义检索 top-k，支持 `score_threshold` 阈值过滤和去重 |
 | DELETE | `/document/{doc_id}` | `X-Internal-Token` | 删除文档向量 |
+
+### POST /search 请求体
+
+```json
+{
+  "question": "河海大学图书馆开放时间是什么？",
+  "top_k": 5,
+  "score_threshold": 0.70
+}
+```
+
+| 字段 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `question` | string | (必填) | 用户问题 |
+| `top_k` | int | 5 | 返回结果数量 |
+| `score_threshold` | float | 0.70 | 余弦相似度阈值，低于此值不返回 |
+
+### POST /search 返回字段
+
+每条结果包含：`doc_id`、`title`、`file_name`、`chunk_idx`、`content`、`score`。
+结果按 `score` 降序；同一文档高度重复的片段自动去重；不足 `top_k` 条时按实际数量返回。
+
+### GET /health 返回字段
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `status` | string | 服务状态，正常为 `"OK"` |
+| `model` | string | Embedding 模型名称 |
+| `index_size` | int | 当前 FAISS 索引中的向量总数 |
+| `key_configured` | bool | DashScope API Key 是否已配置 |

@@ -24,7 +24,14 @@ def verify_internal_token(x_internal_token: str = Header(None)):
 def process(req: ProcessRequest):
     try:
         count = processor.process(
-            req.doc_id, req.path, req.title, req.callback_url
+            req.doc_id, req.path, req.title,
+            callback_url=req.callback_url,
+            file_name=req.file_name,
+            source_url=req.source_url,
+            source_site=req.source_site,
+            category=req.category,
+            published_at=req.published_at,
+            crawled_at=req.crawled_at,
         )
         return ProcessResponse(doc_id=req.doc_id, chunk_count=count, status="COMPLETED")
     except Exception as e:
@@ -34,7 +41,7 @@ def process(req: ProcessRequest):
 @app.post("/search", response_model=SearchResponse, dependencies=[Depends(verify_internal_token)])
 def search(req: SearchRequest):
     vec = embedding_service.embed_query(req.question)
-    results = vector_store.search(vec, req.top_k)
+    results = vector_store.search(vec, req.top_k, req.score_threshold)
     return SearchResponse(
         results=[
             {
@@ -42,7 +49,13 @@ def search(req: SearchRequest):
                 "doc_id": r["doc_id"],
                 "chunk_idx": r["chunk_idx"],
                 "title": r["title"],
+                "file_name": r.get("file_name", ""),
                 "score": r["score"],
+                "source_url": r.get("source_url", ""),
+                "source_site": r.get("source_site", ""),
+                "category": r.get("category", ""),
+                "published_at": r.get("published_at", ""),
+                "crawled_at": r.get("crawled_at", ""),
             }
             for r in results
         ],
@@ -62,4 +75,5 @@ def health():
         status="OK",
         model=settings.embedding_model,
         index_size=vector_store.size,
+        key_configured=bool(settings.dashscope_api_key),
     )

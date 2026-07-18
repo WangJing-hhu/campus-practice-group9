@@ -7,6 +7,13 @@ class ProcessRequest(BaseModel):
     path: str
     title: str
     callback_url: Optional[str] = None
+    # 官方来源元数据（全部可选，普通 TXT/PDF/DOCX 不传时不影响）
+    file_name: Optional[str] = None
+    source_url: Optional[str] = None
+    source_site: Optional[str] = None
+    category: Optional[str] = None
+    published_at: Optional[str] = None
+    crawled_at: Optional[str] = None
 
 
 class ProcessResponse(BaseModel):
@@ -18,6 +25,7 @@ class ProcessResponse(BaseModel):
 class SearchRequest(BaseModel):
     question: str
     top_k: int = 5
+    score_threshold: float = 0.70
 
 
 class SearchResult(BaseModel):
@@ -25,7 +33,14 @@ class SearchResult(BaseModel):
     doc_id: int
     chunk_idx: int
     title: str
+    file_name: str
     score: float
+    # 官方来源元数据（普通文档字段为空字符串）
+    source_url: str = ""
+    source_site: str = ""
+    category: str = ""
+    published_at: str = ""
+    crawled_at: str = ""
 
 
 class SearchResponse(BaseModel):
@@ -43,6 +58,7 @@ class HealthResponse(BaseModel):
     status: str
     model: str
     index_size: int
+    key_configured: bool
 
 
 class CallbackRequest(BaseModel):
