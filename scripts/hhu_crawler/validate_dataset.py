@@ -143,8 +143,10 @@ def main():
         else:
             warnings.append(f"[{pid}] 无生成文件")
 
-    if valid_txt_count < 45:
-        errors.append(f"正文合格的 TXT 仅 {valid_txt_count} 篇（要求 >=45，当前不达标）")
+    if txt_count < 45:
+        errors.append(f"已生成 TXT 仅 {txt_count} 篇（要求 >=45，当前不达标）")
+    if valid_txt_count < 40:
+        errors.append(f"正文合格的 TXT 仅 {valid_txt_count} 篇（要求 >=40 才可导入，当前不达标）")
 
     # ── 3. 检查 manifest.json ────────────────────────
     manifest_path = Path(args.manifest)

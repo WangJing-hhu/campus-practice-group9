@@ -29,6 +29,12 @@ public class OfficialSourceMetadataDTO {
     /** 抓取时间 */
     private LocalDateTime crawledAt;
 
+    /** 时效性：static / annual / historical / dynamic */
+    private String freshness;
+
+    /** 审核备注 */
+    private String reviewNote;
+
     // ── Getter / Setter ──────────────────────────────────
 
     public String getSourceUrl() { return sourceUrl; }
@@ -45,4 +51,10 @@ public class OfficialSourceMetadataDTO {
 
     public LocalDateTime getCrawledAt() { return crawledAt; }
     public void setCrawledAt(LocalDateTime crawledAt) { this.crawledAt = crawledAt; }
+
+    public String getFreshness() { return freshness; }
+    public void setFreshness(String freshness) { this.freshness = freshness; }
+
+    public String getReviewNote() { return reviewNote; }
+    public void setReviewNote(String reviewNote) { this.reviewNote = reviewNote; }
 }

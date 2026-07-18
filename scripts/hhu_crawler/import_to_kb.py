@@ -55,6 +55,8 @@ def upload_document(
                 "category": metadata.get("category", ""),
                 "publishedAt": metadata.get("published_at", ""),
                 "crawledAt": metadata.get("crawled_at", ""),
+                "freshness": metadata.get("freshness", ""),
+                "reviewNote": metadata.get("review_note", ""),
                 "userId": user_id,
             }
             # 移除空值

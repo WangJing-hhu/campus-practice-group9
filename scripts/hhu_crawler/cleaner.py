@@ -63,7 +63,7 @@ def extract_main_content(html: str) -> str:
     """从 HTML 中提取正文内容——激进模式，最大化文本提取。"""
     soup = BeautifulSoup(html, "lxml")
 
-    # 1. 提取 meta description
+    # 1. 提取 meta description + noscript 降级内容
     meta_lines = []
     for meta in soup.find_all("meta"):
         name = (meta.get("name") or "").lower()
@@ -72,6 +72,11 @@ def extract_main_content(html: str) -> str:
             content = meta.get("content", "").strip()
             if content and len(content) > 10:
                 meta_lines.append(content)
+    # noscript 标签中的文本（JS 渲染失败时的降级内容）
+    for ns in soup.find_all("noscript"):
+        text = ns.get_text(strip=True)
+        if text and len(text) > 20:
+            meta_lines.append(text)
 
     # 2. 提取 title
     title = ""
