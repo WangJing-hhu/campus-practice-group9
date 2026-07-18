@@ -10,8 +10,11 @@ export interface ChatSource {
   score: number
   content: string
   sourceUrl?: string
+  sourceSite?: string
   sourceDomain?: string
   category?: string
+  publishedAt?: string
+  crawledAt?: string
   sourceUpdatedAt?: string
   reviewStatus?: string
   validityStatus?: string
