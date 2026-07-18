@@ -10,11 +10,10 @@ export interface ChatSource {
   score: number
   content: string
   sourceUrl?: string
-  sourceDomain?: string
+  sourceSite?: string
   category?: string
-  sourceUpdatedAt?: string
-  reviewStatus?: string
-  validityStatus?: string
+  publishedAt?: string
+  crawledAt?: string
 }
 
 /** 一条问答记录 */

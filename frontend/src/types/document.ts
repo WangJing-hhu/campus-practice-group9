@@ -28,6 +28,11 @@ export interface DocumentItem {
   chunkCount: number
   status: DocStatus
   processStage: ProcessStage
+  sourceUrl?: string
+  sourceSite?: string
+  category?: string
+  publishedAt?: string
+  crawledAt?: string
   errorMessage: string | null
   createUserId: number
   createTime: string
