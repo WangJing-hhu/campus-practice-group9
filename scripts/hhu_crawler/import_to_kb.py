@@ -68,7 +68,7 @@ def upload_document(
                 msg = resp.text[:300] if resp.text else f"HTTP {resp.status_code}"
                 return "FAILED", msg
     except requests.exceptions.ConnectionError:
-        return "FAILED", "无法连接 Java 后端"
+        return "FAILED", "无法连接 Java 后端（请确认 Spring Boot 已启动且 DocumentController 已部署）"
     except requests.exceptions.Timeout:
         return "FAILED", "上传超时"
     except Exception as e:

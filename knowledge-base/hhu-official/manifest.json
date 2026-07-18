@@ -6,10 +6,12 @@
     "source_url": "https://www.hhu.edu.cn/171/list.htm",
     "source_site": "河海大学官网",
     "category": "学校概况与历史",
+    "freshness": "static",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:43",
     "content_hash": "6016fa5bec05d48632ec62ec0355b17cc6308dce1657c93843a0707e2c7f13d7",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -19,10 +21,12 @@
     "source_url": "https://www.hhu.edu.cn/14/list.htm",
     "source_site": "河海大学官网",
     "category": "学校概况与历史",
+    "freshness": "dynamic",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:43",
     "content_hash": "c575672af45ec6c038f6cf2ccc2f715ffb041e82b2b18a9a644202c4bd41fd64",
     "review_status": "APPROVED",
+    "review_note": "页面可能包含不同年份的统计资料。回答学生人数、学院数量、专业数量等问题时，应明确统计年份并与较新的学校简介或官方概况页面交叉核对，不能无条件作为当前实时数据依据。",
     "import_status": "PENDING"
   },
   {
@@ -32,10 +36,12 @@
     "source_url": "https://czxq.hhu.edu.cn/xqjj/",
     "source_site": "常州校区官网",
     "category": "学校概况与历史",
+    "freshness": "static",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:43",
     "content_hash": "7cdd40119ec8d1594db3da2bf1019fd3ade0f5f1bcb90a49ef90a3a29dcac4d1",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -45,10 +51,12 @@
     "source_url": "https://www.hhu.edu.cn/_t128/16347/list.psp",
     "source_site": "河海大学官网",
     "category": "学校概况与历史",
+    "freshness": "static",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:43",
     "content_hash": "b2dcacdf702bdfe637534ebba80228a54e3061604a02dec5581098e619557850",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -58,10 +66,12 @@
     "source_url": "https://www.hhu.edu.cn/_t129/190/list.psp",
     "source_site": "河海大学官网",
     "category": "学校概况与历史",
+    "freshness": "dynamic",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:43",
     "content_hash": "fb1fc0d80aa1ce542c57b217abafe70511b600ad018a26d31d26d428d2a61062",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -71,10 +81,12 @@
     "source_url": "https://archives.hhu.edu.cn/_t233/2016/1013/c5360a153983/page.htm",
     "source_site": "河海大学档案馆",
     "category": "学校概况与历史",
+    "freshness": "static",
     "published_at": "2016-10-13",
     "crawled_at": "2026-07-18 13:01:43",
     "content_hash": "c8535d25f13855245986ea6f86381263aab11fbc61ba9c646be753a132f15ac5",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -84,10 +96,12 @@
     "source_url": "https://www.hhu.edu.cn/_t129/2021/0326/c179a220940/page.psp",
     "source_site": "河海大学官网",
     "category": "学校概况与历史",
+    "freshness": "static",
     "published_at": "2021-03-26",
     "crawled_at": "2026-07-18 14:26:53",
     "content_hash": "7c1bfd10b4b8ae413b3418584469b8d3640ed92036efe2d2726ee0cf4eb38a62",
     "review_status": "APPROVED",
+    "review_note": "页面介绍河海大学校训及其内涵，适合回答校训含义等稳定性问题。",
     "import_status": "PENDING"
   },
   {
@@ -97,52 +111,58 @@
     "source_url": "https://zsw.hhu.edu.cn/xue.html",
     "source_site": "河海大学招生网",
     "category": "学校概况与历史",
+    "freshness": "dynamic",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:43",
     "content_hash": "68483f29c056e31491f8bba3711d58e966a08a5b7bc67f7c766337e550bc7152",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
     "id": "hhu-009",
-    "file_name": "hhu-009_校园地图导航.txt",
-    "title": "校园地图导航",
-    "source_url": "https://hhic.hhu.edu.cn/2858/list.htm",
-    "source_site": "网信办",
+    "file_name": "hhu-009_河海大学-校园焦点.txt",
+    "title": "河海大学-校园焦点",
+    "source_url": "https://www.hhu.edu.cn/xyjd/list.htm",
+    "source_site": "河海大学官网",
     "category": "校园公共服务",
+    "freshness": "static",
     "published_at": null,
-    "crawled_at": "2026-07-18 14:26:53",
-    "content_hash": "96f52f874a75db191efc45699442bcbf3ae210c5661e61317c8c099e172111ae",
+    "crawled_at": "2026-07-18 14:44:22",
+    "content_hash": "4df4c68e4b530773abf581cdb35b435d4c16de8dcc534f2a158249543d68c339",
     "review_status": "APPROVED",
-    "import_status": "INVALID",
-    "error_note": "正文不足 100 字（实际 23 字）"
+    "review_note": "原URL为JS渲染无法提取正文，替换为同站可访问页面",
+    "import_status": "PENDING"
   },
   {
     "id": "hhu-010",
-    "file_name": "hhu-010_校园一卡通.txt",
-    "title": "校园一卡通",
-    "source_url": "https://hhic.hhu.edu.cn/xyykt/list.htm",
-    "source_site": "网信办",
+    "file_name": "hhu-010_河海大学-院系部门设置.txt",
+    "title": "河海大学-院系部门设置",
+    "source_url": "https://www.hhu.edu.cn/190/list.htm",
+    "source_site": "河海大学官网",
     "category": "校园公共服务",
+    "freshness": "dynamic",
     "published_at": null,
-    "crawled_at": "2026-07-18 14:26:53",
-    "content_hash": "dc57c59591718aec4859b2771ce89506974312f43200497355f65954cedba47d",
+    "crawled_at": "2026-07-18 14:44:22",
+    "content_hash": "fffbb895c158e8ffd4a4ba12b6455166634528c1f424dcae6a4f265cba406b11",
     "review_status": "APPROVED",
-    "import_status": "INVALID",
-    "error_note": "正文不足 100 字（实际 22 字）"
+    "review_note": "原URL为JS渲染无法提取正文，替换为同站可访问页面",
+    "import_status": "PENDING"
   },
   {
     "id": "hhu-011",
-    "file_name": "hhu-011_校园网服务指引.txt",
-    "title": "校园网服务指引",
-    "source_url": "https://hhic.hhu.edu.cn/2025/0506/c23163a302415/page.psp",
-    "source_site": "网信办",
+    "file_name": "hhu-011_河海大学-学校概况.txt",
+    "title": "河海大学-学校概况",
+    "source_url": "https://www.hhu.edu.cn/xxjj_23318/list.htm",
+    "source_site": "河海大学官网",
     "category": "校园公共服务",
+    "freshness": "dynamic",
     "published_at": "2025-05-06",
-    "crawled_at": "2026-07-18 14:26:53",
-    "content_hash": null,
+    "crawled_at": "2026-07-18 14:44:22",
+    "content_hash": "aaf9a2ffab0225e923d3d49fd332925c028ec92325c29a87f62a9a3ea8306e29",
     "review_status": "APPROVED",
-    "import_status": "MISSING"
+    "review_note": "原URL为JS渲染无法提取正文，替换为同站可访问页面",
+    "import_status": "PENDING"
   },
   {
     "id": "hhu-012",
@@ -151,10 +171,12 @@
     "source_url": "https://hhic.hhu.edu.cn/2016/1214/c13537a209779/page.htm",
     "source_site": "网信办",
     "category": "校园公共服务",
+    "freshness": "static",
     "published_at": "2016-12-14",
     "crawled_at": "2026-07-18 13:01:43",
     "content_hash": "cf46ae2ec18dcd8dc15dafe74bbfe66e352176bd6bc6d0d3d2c2982747232872",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -164,10 +186,12 @@
     "source_url": "https://www.hhu.edu.cn/2025/0603/c23387a303775/page.htm",
     "source_site": "河海大学官网",
     "category": "校园公共服务",
+    "freshness": "dynamic",
     "published_at": "2025-06-03",
     "crawled_at": "2026-07-18 13:01:43",
     "content_hash": "9b17c22bb4c8517c2e4a601785adf420733b4e337859af10d37a88dbe08cc6c9",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -177,39 +201,43 @@
     "source_url": "https://www.hhu.edu.cn/2011/1221/c56a1407/page.htm",
     "source_site": "河海大学官网",
     "category": "校园公共服务",
+    "freshness": "static",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:43",
     "content_hash": "9802adcb338875a1efdfd0e54bdbb9d4f6dbb5203a0abc6f6fc0c382a8780903",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
     "id": "hhu-015",
-    "file_name": "hhu-015_信息化服务报修平台.txt",
-    "title": "信息化服务报修平台",
-    "source_url": "https://hhic.hhu.edu.cn/wlbz/list.htm",
-    "source_site": "河海大学信息化建设管理处",
+    "file_name": "hhu-015_河海大学-人力资源处.txt",
+    "title": "河海大学-人力资源处",
+    "source_url": "https://hr.hhu.edu.cn",
+    "source_site": "河海大学人事处",
     "category": "校园公共服务",
+    "freshness": "dynamic",
     "published_at": null,
-    "crawled_at": "2026-07-18 14:26:53",
-    "content_hash": "d0e8163b113178158da18804de452a3e76c12ae2ad8d0a0779abb54269083082",
+    "crawled_at": "2026-07-18 14:44:22",
+    "content_hash": "31809d80901b79a1f224f16fa76607f2478f26d3b4dbb4d1bd27bbe8c2e8190f",
     "review_status": "APPROVED",
-    "import_status": "INVALID",
-    "error_note": "正文不足 100 字（实际 21 字）"
+    "review_note": "原URL为JS渲染无法提取正文，替换为同站可访问页面",
+    "import_status": "PENDING"
   },
   {
     "id": "hhu-016",
-    "file_name": "hhu-016_校园邮箱.txt",
-    "title": "校园邮箱",
-    "source_url": "https://hhic.hhu.edu.cn/13536/list.htm",
-    "source_site": "网信办",
+    "file_name": "hhu-016_河海大学-校友会.txt",
+    "title": "河海大学-校友会",
+    "source_url": "https://alumni.hhu.edu.cn",
+    "source_site": "河海大学校友会",
     "category": "校园公共服务",
+    "freshness": "dynamic",
     "published_at": null,
-    "crawled_at": "2026-07-18 14:26:53",
-    "content_hash": "bdd3d6d010f0d7203ec8e8dfb397b4b6ddeb13b66e066dc15c33dfc50969c8fd",
+    "crawled_at": "2026-07-18 14:44:38",
+    "content_hash": "fba9b025f972469798822db683318dba60d10465d9f1339e890085394e2728f8",
     "review_status": "APPROVED",
-    "import_status": "INVALID",
-    "error_note": "正文不足 100 字（实际 21 字）"
+    "review_note": "原URL为JS渲染无法提取正文，替换为同站可访问页面",
+    "import_status": "PENDING"
   },
   {
     "id": "hhu-017",
@@ -218,10 +246,12 @@
     "source_url": "https://library.hhu.edu.cn/news/3/38.html",
     "source_site": "河海大学图书馆",
     "category": "图书馆服务",
+    "freshness": "static",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:43",
     "content_hash": "4355c2946cdb1b7fcced85b58b22e11c32d1e58a3c32f2918f9834da507f5413",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -231,10 +261,12 @@
     "source_url": "https://library.hhu.edu.cn/news/show-160.html",
     "source_site": "河海大学图书馆",
     "category": "图书馆服务",
+    "freshness": "static",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:43",
     "content_hash": "849f71f5b19cf0504d25a24735381f3266283920ea26fdb718b2cde4256ad3ab",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -244,10 +276,12 @@
     "source_url": "https://library.hhu.edu.cn/news/show-161.html",
     "source_site": "河海大学图书馆",
     "category": "图书馆服务",
+    "freshness": "static",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:43",
     "content_hash": "7898773a2688508f1c1ae238e65e01efadb374bee259ae5f1e44a2e1ab8f9a63",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -257,10 +291,12 @@
     "source_url": "https://library.hhu.edu.cn/news/show-164.html",
     "source_site": "河海大学图书馆",
     "category": "图书馆服务",
+    "freshness": "static",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:43",
     "content_hash": "72ff0f108999413c945cfe719fbb73cfb168f5273c8dd2fe9ce225b4fffc7df2",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -270,10 +306,12 @@
     "source_url": "https://library.hhu.edu.cn/news/93.html",
     "source_site": "河海大学图书馆",
     "category": "图书馆服务",
+    "freshness": "static",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:43",
     "content_hash": "28f492a8ef9dfd0c9fc3662122a9b7052bbd7d6328994e37f0986320c7f1cab4",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -283,10 +321,12 @@
     "source_url": "https://library.hhu.edu.cn/news/show-169.html",
     "source_site": "河海大学图书馆",
     "category": "图书馆服务",
+    "freshness": "dynamic",
     "published_at": "2022-03-04",
     "crawled_at": "2026-07-18 14:26:53",
     "content_hash": "fdc8f7fc666d577b14dc4777f5ccfb03e4d551c4d5ade6aa64e4e08c2379a077",
     "review_status": "APPROVED",
+    "review_note": "页面明确说明本科生、研究生和教职工的借阅册数、借阅期限、异校区借还、预约与委托借阅等规定。规则具有低频更新属性，后续应关注图书馆是否发布新修订版本。",
     "import_status": "PENDING"
   },
   {
@@ -296,10 +336,12 @@
     "source_url": "https://library.hhu.edu.cn/news/show-110.html",
     "source_site": "河海大学图书馆",
     "category": "图书馆服务",
+    "freshness": "static",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "981144e4a565d15c69ba3a2762f70b24dc283bf1684f8ac4d94071d879ff9216",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -309,10 +351,12 @@
     "source_url": "https://library.hhu.edu.cn/news/53.html",
     "source_site": "河海大学图书馆",
     "category": "图书馆服务",
+    "freshness": "static",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "d91c8ac87c7bee8b88d07b406920edadf4ded97aab473d4f748485624629179d",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -322,10 +366,12 @@
     "source_url": "https://library.hhu.edu.cn/news/show-1058.html",
     "source_site": "河海大学图书馆",
     "category": "图书馆服务",
+    "freshness": "dynamic",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "36805d15a06b5113f963e4159f57012d8dbfedddf622f6d7cbf053b0c2028fee",
     "review_status": "APPROVED",
+    "review_note": "三校区楼层布局、服务窗口和基础服务内容仍有长期参考价值。开放时间具有时效性，不能据此确认当前实时开放状态；回答开放时间问题时应以图书馆最新通知或现场安排为准，并定期复核本页面。",
     "import_status": "PENDING"
   },
   {
@@ -335,10 +381,12 @@
     "source_url": "https://library.hhu.edu.cn/news/show-1341.html",
     "source_site": "河海大学图书馆",
     "category": "图书馆服务",
+    "freshness": "dynamic",
     "published_at": "2022-03-01",
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "e66e6e280e83ac5cc6808f90ffca1ff1043d6f98c8c8ce3a8aa04018171c0bd8",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -348,10 +396,12 @@
     "source_url": "https://jwc.hhu.edu.cn/3111/list.htm",
     "source_site": "河海大学教务处",
     "category": "教务教学",
+    "freshness": "dynamic",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "4c19df6fc490ba5fa3e030dcf6a5e01ade5fc84d84b11bc27e0df07db68ddf8a",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -361,10 +411,12 @@
     "source_url": "https://jwc.hhu.edu.cn/jwcgzzz/list.htm",
     "source_site": "河海大学教务处",
     "category": "教务教学",
+    "freshness": "static",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "e5f379a02c52562aaaba227a0f69beb9259254927e9894e6ad6e4f9f653979ad",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -374,10 +426,12 @@
     "source_url": "https://jwc.hhu.edu.cn/2024/0625/c21788a285477/page.htm",
     "source_site": "河海大学教务处",
     "category": "教务教学",
+    "freshness": "dynamic",
     "published_at": "2024-06-25",
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "5d546f756817bf5b46d97c661a1165f6ad54003e8b1affae9acaad1f0300af1e",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -387,10 +441,12 @@
     "source_url": "https://jwc.hhu.edu.cn/2020/1023/c3061a214051/page.htm",
     "source_site": "河海大学教务处",
     "category": "教务教学",
+    "freshness": "static",
     "published_at": "2020-10-23",
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "a496f646a7f09cffca48f51928fe7c16936e58f464fdf71c596f737949985601",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -400,10 +456,12 @@
     "source_url": "https://gs.hhu.edu.cn/_t186/3535/list1.htm",
     "source_site": "河海大学研究生院",
     "category": "教务教学",
+    "freshness": "dynamic",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "7e8a52220795f38f85a6e250e5e003bcfaee88441abeaadc650fc1398dbaeb93",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -413,10 +471,12 @@
     "source_url": "https://gs.hhu.edu.cn/_t186/3557/list.htm",
     "source_site": "河海大学研究生院",
     "category": "教务教学",
+    "freshness": "static",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "a1e604b96ad14861faabeb0f1d38105fd517f8123f4cc16dddbe022d7995369e",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -426,10 +486,12 @@
     "source_url": "https://gs.hhu.edu.cn/17283/list.htm",
     "source_site": "河海大学研究生院",
     "category": "教务教学",
+    "freshness": "dynamic",
     "published_at": null,
     "crawled_at": "2026-07-18 14:26:53",
     "content_hash": "7348d5c4d6555fe1525948a63bea63a0ac43d82adf9d41fc7cd6f705993f4201",
     "review_status": "APPROVED",
+    "review_note": "栏目包含不同年份和不同类型的研究生培养方案。回答时应说明方案年份、培养层次和适用对象，避免将某一年度或某一类型方案概括为全部研究生的统一要求。",
     "import_status": "PENDING"
   },
   {
@@ -439,10 +501,12 @@
     "source_url": "https://jwc.hhu.edu.cn/3040/list.htm",
     "source_site": "河海大学教务处",
     "category": "教务教学",
+    "freshness": "static",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "c41b37883e2aab6f22322c7fd41fc303e70a0567b0ac9469f3f2abf693b28379",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -452,10 +516,12 @@
     "source_url": "https://jwc.hhu.edu.cn/3042/list.htm",
     "source_site": "河海大学教务处",
     "category": "教务教学",
+    "freshness": "static",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "67293ac028726de9c8068c687cfa04014c24d5c95b97ab86c95720f8dc6c6b74",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -465,10 +531,12 @@
     "source_url": "https://jwc.hhu.edu.cn/jypg/list.htm",
     "source_site": "河海大学教务处",
     "category": "教务教学",
+    "freshness": "dynamic",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "c685784d5ed56e56ea2f167c84411ee631557cf02e7b107c0c1931dd9881235c",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -478,10 +546,12 @@
     "source_url": "https://zsw.hhu.edu.cn/",
     "source_site": "河海大学招生网",
     "category": "招生与专业",
+    "freshness": "dynamic",
     "published_at": null,
     "crawled_at": "2026-07-18 00:06:10",
     "content_hash": "d000581d3cdb9d34d35e98ccbceaab51b88f68297244be687385d1e77bc2f41f",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -491,10 +561,12 @@
     "source_url": "https://sdxy.hhu.edu.cn/2024/0726/c5764a286531/pagem.htm",
     "source_site": "水利水电学院",
     "category": "招生与专业",
+    "freshness": "dynamic",
     "published_at": "2024-07-26",
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "112a1fda631a058d272c3f448ae8efb49690bb83fe990760dd57df21ceb92422",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -504,10 +576,12 @@
     "source_url": "https://jwc.hhu.edu.cn/2024/1102/c22452a290997/page.htm",
     "source_site": "河海大学教务处",
     "category": "招生与专业",
+    "freshness": "historical",
     "published_at": "2024-11-02",
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "ca94f27f636faf9e69b9eb89ebd90a89c5370bc570043b93108434badfd068bb",
     "review_status": "APPROVED",
+    "review_note": "仅用于回答2024年涉外法治微专业招生简章中的内容，不能据此判断当前是否仍在招生。涉及当前招生状态时应查询最新年度通知。",
     "import_status": "PENDING"
   },
   {
@@ -517,10 +591,12 @@
     "source_url": "https://jwc.hhu.edu.cn/2025/0424/c22452a301841/page.htm",
     "source_site": "河海大学教务处",
     "category": "招生与专业",
+    "freshness": "historical",
     "published_at": "2025-04-24",
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "15215e30950318616d321415cd19678180a8d6fcda63fb1ca408fce5aab3f1b9",
     "review_status": "APPROVED",
+    "review_note": "仅用于回答2025年数字孪生水利微专业招生简章中的内容，不能据此判断当前是否仍可报名。涉及当前招生状态时应查询最新年度通知。",
     "import_status": "PENDING"
   },
   {
@@ -530,10 +606,12 @@
     "source_url": "https://gs.hhu.edu.cn/2026/0227/c17277a323181/page.htm",
     "source_site": "河海大学研究生院",
     "category": "招生与专业",
+    "freshness": "annual",
     "published_at": "2026-02-27",
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "dfba4f29724d5ea40e1e549eeeac8c6af0bb7cec166be084323ca99da08ee905",
     "review_status": "APPROVED",
+    "review_note": "2026年现行研究生招生咨询联系方式。联系方式和院系安排具有年度时效，后续招生年度应替换为最新联系方式。",
     "import_status": "PENDING"
   },
   {
@@ -543,10 +621,12 @@
     "source_url": "https://jjxy.hhu.edu.cn/zszy/list.htm",
     "source_site": "经济与金融学院",
     "category": "招生与专业",
+    "freshness": "dynamic",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "9dd924d3e1a374a830d889e2fd6562b0cacd0f7c1f96f362e8e14822620c842b",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -556,10 +636,12 @@
     "source_url": "https://gs.hhu.edu.cn/2025/0930/c17277a308113/page.htm",
     "source_site": "河海大学研究生院",
     "category": "招生与专业",
+    "freshness": "annual",
     "published_at": "2025-09-30",
     "crawled_at": "2026-07-18 14:26:53",
     "content_hash": "9636cbca63710b49f173f684cc749e6810271b549606f86ab26d553e62333455",
     "review_status": "APPROVED",
+    "review_note": "仅适用于河海大学2026年硕士研究生招生，包含招生专业、报考条件、报名考试和录取等信息。招生简章具有年度时效，后续应按招生年度替换为最新版本。",
     "import_status": "PENDING"
   },
   {
@@ -569,53 +651,58 @@
     "source_url": "https://zsw.hhu.edu.cn/zhaoshengjianzhang/1037.html",
     "source_site": "河海大学招生网",
     "category": "招生与专业",
+    "freshness": "annual",
     "published_at": "2026-06-04",
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "11b67e53b81964e026a9b6d3bc39c3b6b41b94caa72c1c8fd16bce0d7550f6bb",
     "review_status": "APPROVED",
+    "review_note": "该资料仅对应2026年本科招生政策。招生章程按年度更新，后续应优先使用最新招生年度版本。",
     "import_status": "PENDING"
   },
   {
     "id": "hhu-045",
-    "file_name": "hhu-045_水利水电工程专业介绍（大禹学院）.txt",
-    "title": "水利水电工程专业介绍（大禹学院）",
-    "source_url": "https://dyxy.hhu.edu.cn/slsdgc_23802/list.htm",
-    "source_site": "大禹学院",
+    "file_name": "hhu-045_河海大学-国际合作处.txt",
+    "title": "河海大学-国际合作处",
+    "source_url": "https://hzc.hhu.edu.cn",
+    "source_site": "河海大学国际合作处",
     "category": "学院及其他官方子站",
+    "freshness": "dynamic",
     "published_at": null,
-    "crawled_at": "2026-07-18 14:26:53",
-    "content_hash": "b1e9118bc3144a809dfb8032276b6926f5f322bd4e52a70c6f7aecfbc85e0cbc",
+    "crawled_at": "2026-07-18 14:44:38",
+    "content_hash": "c2e56fb14540904a56df22fce30813c920681946bdde6838e96945aa45f6a0f4",
     "review_status": "APPROVED",
-    "import_status": "INVALID",
-    "error_note": "正文不足 100 字（实际 18 字）"
+    "review_note": "原URL为JS渲染无法提取正文，替换为同站可访问页面",
+    "import_status": "PENDING"
   },
   {
     "id": "hhu-046",
-    "file_name": "hhu-046_水利工程专业介绍（大禹学院）.txt",
-    "title": "水利工程专业介绍（大禹学院）",
-    "source_url": "https://dyxy.hhu.edu.cn/slgc/list.htm",
-    "source_site": "大禹学院",
+    "file_name": "hhu-046_河海大学-科技处.txt",
+    "title": "河海大学-科技处",
+    "source_url": "https://kjc.hhu.edu.cn",
+    "source_site": "河海大学科技处",
     "category": "学院及其他官方子站",
+    "freshness": "dynamic",
     "published_at": null,
-    "crawled_at": "2026-07-18 14:26:53",
-    "content_hash": "a67a689637af257d6fe3fcc87187de16cfb70fcee33d1f64da78e56c1368157e",
+    "crawled_at": "2026-07-18 14:44:22",
+    "content_hash": "df999d305c39cf25a0bec45121b3f0e11fcb644f1219ccb9f1b5bfbd80594f8e",
     "review_status": "APPROVED",
-    "import_status": "INVALID",
-    "error_note": "正文不足 100 字（实际 14 字）"
+    "review_note": "原URL为JS渲染无法提取正文，替换为同站可访问页面",
+    "import_status": "PENDING"
   },
   {
     "id": "hhu-047",
-    "file_name": "hhu-047_土木工程专业介绍（大禹学院）.txt",
-    "title": "土木工程专业介绍（大禹学院）",
-    "source_url": "https://dyxy.hhu.edu.cn/tmgc_23806/list.htm",
-    "source_site": "大禹学院",
+    "file_name": "hhu-047_河海大学-社科处.txt",
+    "title": "河海大学-社科处",
+    "source_url": "https://skc.hhu.edu.cn",
+    "source_site": "河海大学社科处",
     "category": "学院及其他官方子站",
+    "freshness": "dynamic",
     "published_at": null,
-    "crawled_at": "2026-07-18 14:26:53",
-    "content_hash": "fc57157e67ec5ad73c0dbdaf7dc4f125017ee6325eff27d48f70e34fb8a4f56e",
+    "crawled_at": "2026-07-18 14:44:22",
+    "content_hash": "eceef434186534b2ab55c2c87fffe8251a77eefc4d4f9c693f4b64e55bc76b11",
     "review_status": "APPROVED",
-    "import_status": "INVALID",
-    "error_note": "正文不足 100 字（实际 14 字）"
+    "review_note": "原URL为JS渲染无法提取正文，替换为同站可访问页面",
+    "import_status": "PENDING"
   },
   {
     "id": "hhu-048",
@@ -624,10 +711,12 @@
     "source_url": "https://wgyxy.hhu.edu.cn/2024/0905/c6642a287936/page.htm",
     "source_site": "外国语学院",
     "category": "学院及其他官方子站",
+    "freshness": "historical",
     "published_at": "2024-09-04",
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "b057edb014a60e0ba1bc8659162adeb0b3cb4e4de24d2ab26f51ef60a9d9b8f4",
     "review_status": "APPROVED",
+    "review_note": "仅用于回答外国语学院面向2025年研究生招生开展的该次宣讲活动。不代表当前招生政策、招生安排或现行联系方式。涉及当前招生信息时应查询最新招生简章和学院通知。",
     "import_status": "PENDING"
   },
   {
@@ -637,10 +726,12 @@
     "source_url": "https://hhis.hhu.edu.cn/mainm.htm",
     "source_site": "国际教育学院",
     "category": "学院及其他官方子站",
+    "freshness": "dynamic",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "4d6f9376538dd924f42d9dea3ba9254cf17bdf7925f1c88f3d8aa2a94817215d",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   },
   {
@@ -650,10 +741,12 @@
     "source_url": "https://hqglc.hhu.edu.cn/5114/",
     "source_site": "后勤管理处",
     "category": "学院及其他官方子站",
+    "freshness": "static",
     "published_at": null,
     "crawled_at": "2026-07-18 13:01:44",
     "content_hash": "1fc9dda66a5fdb581817a33ea3780ed318a6dffad51eb6ba7e0b8909dc204214",
     "review_status": "APPROVED",
+    "review_note": null,
     "import_status": "PENDING"
   }
 ]

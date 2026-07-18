@@ -71,6 +71,8 @@ def main():
         category = row.get("category", "").strip()
         review_status = row.get("review_status", "").strip()
         published_at = row.get("published_at", "").strip() or None
+        freshness = row.get("freshness", "static").strip()
+        review_note = row.get("review_note", "").strip() or None
 
         entry = {
             "id": page_id,
@@ -79,10 +81,12 @@ def main():
             "source_url": url,
             "source_site": source_site,
             "category": category,
+            "freshness": freshness,
             "published_at": published_at,
             "crawled_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "content_hash": None,
             "review_status": review_status,
+            "review_note": review_note,
             "import_status": "PENDING",
         }
 
