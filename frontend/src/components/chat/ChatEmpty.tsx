@@ -21,6 +21,8 @@ export interface ChatEmptyProps {
   status?: ChatEmptyStatus
   /** 点击示例问题回调 */
   onSelectQuestion?: (question: string) => void
+  /** 网络错误重试回调 */
+  onRetry?: () => void
 }
 
 // ===== 示例问题 =====
@@ -87,6 +89,7 @@ function getEmptyConfig(status: ChatEmptyStatus): EmptyConfig {
 export function ChatEmpty({
   status = 'normal',
   onSelectQuestion,
+  onRetry,
 }: ChatEmptyProps) {
   const config = getEmptyConfig(status)
 
@@ -131,12 +134,12 @@ export function ChatEmpty({
         </div>
       )}
 
-      {/* 网络错误时不显示问题但提示重试 */}
-      {status === 'network-error' && onSelectQuestion && (
+      {/* 网络错误时提供重试按钮 */}
+      {status === 'network-error' && onRetry && (
         <Button
           type="primary"
           style={{ marginTop: 24 }}
-          onClick={() => onSelectQuestion('')}
+          onClick={() => onRetry()}
         >
           重新连接
         </Button>

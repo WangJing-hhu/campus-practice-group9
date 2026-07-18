@@ -1,0 +1,186 @@
+/* ===================================================
+   官网来源组件样式
+   使用 official-source 作用域前缀
+   与现有 Ant Design 和 chat.css 风格一致
+   =================================================== */
+
+/* ===================================================
+   1. OfficialSourceTag — 官方来源标签
+   =================================================== */
+
+.official-source-tags {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.official-source-tag {
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.official-source-category-tag {
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.official-source-validity-tag {
+  font-size: 12px;
+  line-height: 20px;
+}
+
+/* ===================================================
+   2. OfficialSourceDetail — 来源详情
+   =================================================== */
+
+.official-source-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 0 4px;
+  border-top: 1px dashed #eee;
+  font-size: 13px;
+}
+
+.official-source-detail__site,
+.official-source-detail__category {
+  font-size: 13px;
+  color: #595959;
+  line-height: 1.6;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.official-source-detail__date {
+  font-size: 12px;
+  color: #8c8c8c;
+  display: flex;
+  align-items: center;
+}
+
+.official-source-detail__crawl-date {
+  font-size: 12px;
+  color: #bfbfbf;
+}
+
+.official-source-detail__link {
+  padding: 0;
+  font-size: 12px;
+  height: auto;
+  align-self: flex-start;
+  word-break: break-all;
+}
+
+/* ===================================================
+   3. OfficialSourceFilter — 筛选栏
+   =================================================== */
+
+.official-source-filter {
+  padding: 10px 0;
+}
+
+.official-source-filter__checkbox {
+  font-size: 13px;
+}
+
+.official-source-filter__sites {
+  min-width: 140px;
+}
+
+.official-source-filter__category {
+  min-width: 120px;
+}
+
+.official-source-filter__clear {
+  font-size: 12px;
+}
+
+/* ===================================================
+   4. SourceCard 官网扩展行
+   =================================================== */
+
+/* 来源卡片内的官方来源信息行 */
+.chat-source__official {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.chat-source__official-site {
+  font-size: 12px;
+  color: #595959;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  margin-bottom: 4px;
+}
+
+.chat-source__official-date {
+  font-size: 12px;
+  color: #8c8c8c;
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.chat-source__official-link {
+  padding: 0;
+  font-size: 12px;
+  height: auto;
+  word-break: break-all;
+}
+
+/* 官方信息标签（内嵌在卡片头部的轻量标记） */
+.chat-source__official-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  color: #005BAC;
+  background: #e6f0ff;
+  border-radius: 3px;
+  padding: 1px 6px;
+  line-height: 18px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ===================================================
+   5. SourceList — 来源列表
+   =================================================== */
+
+.official-source-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.official-source-list__empty {
+  font-size: 13px;
+  color: #bfbfbf;
+  text-align: center;
+  padding: 12px 0;
+}
+
+/* ===================================================
+   6. 响应式适配
+   =================================================== */
+
+@media (max-width: 768px) {
+  .official-source-detail {
+    gap: 4px;
+    padding: 8px 0 2px;
+  }
+
+  .chat-source__official {
+    margin-top: 6px;
+    padding-top: 6px;
+  }
+
+  .chat-source__official-link {
+    font-size: 11px;
+  }
+}

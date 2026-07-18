@@ -188,7 +188,8 @@
 }
 
 .chat-sidebar__item:hover .chat-sidebar__item-actions,
-.chat-sidebar__item--active .chat-sidebar__item-actions {
+.chat-sidebar__item--active .chat-sidebar__item-actions,
+.chat-sidebar__item:focus-within .chat-sidebar__item-actions {
   opacity: 1;
 }
 
@@ -500,6 +501,23 @@
   position: relative;
 }
 
+/* 默认折叠：最多显示 3 行 */
+.chat-source__body:not(.chat-source__body--expanded)
+.chat-source__content {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+/* 展开后取消行数限制 */
+.chat-source__body--expanded
+.chat-source__content {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+}
+
 .chat-source__content {
   font-size: 13px;
   color: #595959;
@@ -508,17 +526,6 @@
   word-break: break-word;
   overflow-wrap: break-word;
   margin-bottom: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* 展开后取消行数限制 */
-.chat-source__body .ant-typography.chat-source__content {
-  display: block;
-  -webkit-line-clamp: unset;
-  overflow: visible;
 }
 
 .chat-source__toggle {
@@ -526,6 +533,19 @@
   font-size: 12px;
   height: auto;
   margin-top: 6px;
+}
+
+/* 官网原文链接 */
+.chat-source__link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #005BAC;
+  text-decoration: none;
+}
+
+.chat-source__link:hover {
+  text-decoration: underline;
 }
 
 /* ===================================================

@@ -37,8 +37,9 @@ export function ChatPage() {
   // 会话
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [activeConversationId, setActiveConversationId] = useState<number | null>(null)
+  const CONVERSATION_PAGE_SIZE = 20
   const [convPage, setConvPage] = useState(1)
-  const [, setConvTotal] = useState(0)
+  const [convTotal, setConvTotal] = useState(0)
   const [convLoading, setConvLoading] = useState(false)
 
   // 消息
@@ -65,12 +66,20 @@ export function ChatPage() {
   }, [])
 
   // ===== 加载会话列表 =====
-  const loadConversations = useCallback(async (page: number) => {
+  const loadConversations = useCallback(async (page: number, append = false) => {
     setConvLoading(true)
     try {
-      const result = await getConversations({ page, size: 20 })
+      const result = await getConversations({ page, size: CONVERSATION_PAGE_SIZE })
       if (!mounted.current) return
-      setConversations(result.records ?? [])
+      setConversations((prev) => {
+        if (!append) {
+          return result.records ?? []
+        }
+        const merged = [...prev, ...(result.records ?? [])]
+        return Array.from(
+          new Map(merged.map((item) => [item.id, item])).values(),
+        )
+      })
       setConvTotal(result.total ?? 0)
       setConvPage(result.current ?? page)
     } catch {
@@ -126,6 +135,7 @@ export function ChatPage() {
   // ===== 发送消息 =====
   const handleSend = useCallback(async (question: string) => {
     if (!question.trim() || sending) return
+    if (detailLoading || convLoading) return
 
     setError(null)
     setSending(true)
@@ -202,7 +212,7 @@ export function ChatPage() {
         },
       },
     )
-  }, [sending, startStream, loadConversations])
+  }, [sending, detailLoading, convLoading, startStream, loadConversations])
 
   // ===== 切换会话 =====
   const handleSelectConversation = useCallback((id: number) => {
@@ -222,22 +232,22 @@ export function ChatPage() {
       if (id === activeConversationId) {
         handleNewChat()
       }
-      loadConversations(convPage)
+      loadConversations(1, false)
     } catch {
       // request.ts 统一提示
     }
-  }, [activeConversationId, convPage, loadConversations, handleNewChat])
+  }, [activeConversationId, loadConversations, handleNewChat])
 
   // ===== 重命名会话 =====
   const handleRename = useCallback(async (id: number, title: string) => {
     try {
       await updateConversationTitle(id, title)
       message.success('标题已更新')
-      loadConversations(convPage)
+      loadConversations(1, false)
     } catch {
       // request.ts 统一提示
     }
-  }, [convPage, loadConversations])
+  }, [loadConversations])
 
   // ===== 停止生成 =====
   const handleStop = useCallback(() => {
@@ -259,10 +269,30 @@ export function ChatPage() {
     }
   }, [stopStream, streamingText, streamingSources])
 
+  // ===== 加载更多会话 =====
+  const handleLoadMore = useCallback(() => {
+    if (convLoading) return
+    if (conversations.length >= convTotal) return
+    const nextPage = convPage + 1
+    loadConversations(nextPage, true)
+  }, [convLoading, conversations.length, convTotal, convPage, loadConversations])
+
+  // ===== 重新连接（网络错误重试） =====
+  const handleRetry = useCallback(() => {
+    if (currentConversationId.current != null) {
+      void loadConversationDetail(currentConversationId.current)
+      return
+    }
+    void loadConversations(1, false)
+  }, [loadConversationDetail, loadConversations])
+
   // ===== 转换为组件需要的消息格式 =====
   const uiMessages: ChatMessage[] = useMemo(() => {
     const mapped: ChatMessage[] = messages.map((msg, index) => ({
-      id: msg.recordId ?? `${msg.role}-${index}`,
+      id:
+        msg.recordId != null
+          ? `${msg.recordId}-${msg.role}`
+          : `${msg.role}-${index}`,
       role: msg.role,
       content: msg.content,
       sources: msg.sources,
@@ -270,20 +300,20 @@ export function ChatPage() {
       isError: false,
     }))
 
-    // 追加流式生成中的临时消息
-    if (streamingText) {
+    // 发送中或流式输出中，立即创建流式助手气泡
+    if (sending || streamingText) {
       mapped.push({
-        id: 'streaming',
+        id: `streaming-${currentConversationId.current ?? 'new'}`,
         role: 'assistant',
         content: streamingText,
         sources: streamingSources,
-        isStreaming: true,
+        isStreaming: sending,
         isError: false,
       })
     }
 
     return mapped
-  }, [messages, streamingText, streamingSources])
+  }, [messages, streamingText, streamingSources, sending])
 
   // ===== 空状态类型 =====
   const emptyStatus = error && messages.length === 0 ? 'network-error' as const : 'normal' as const
@@ -312,13 +342,13 @@ export function ChatPage() {
           conversations={conversations}
           activeConversationId={activeConversationId}
           loading={convLoading}
-          hasMore={false}
+          hasMore={conversations.length < convTotal}
           collapsed={sidebarCollapsed}
           onCreate={handleNewChat}
           onSelect={handleSelectConversation}
           onRename={handleRename}
           onDelete={handleDeleteConversation}
-          onLoadMore={() => undefined}
+          onLoadMore={handleLoadMore}
           onCollapse={setSidebarCollapsed}
         />
 
@@ -329,6 +359,7 @@ export function ChatPage() {
               loading={detailLoading}
               emptyStatus={emptyStatus}
               onSelectQuestion={handleSend}
+              onRetry={handleRetry}
             />
           </div>
 
@@ -341,7 +372,7 @@ export function ChatPage() {
           <div className="chat-layout__input">
             <ChatInput
               value={inputValue}
-              disabled={false}
+              disabled={detailLoading || convLoading}
               generating={sending}
               placeholder="请输入你的问题"
               maxLength={2000}

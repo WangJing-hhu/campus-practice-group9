@@ -229,8 +229,12 @@ export function ConversationSidebar({
                         type="text"
                         size="small"
                         icon={<EditOutlined />}
-                        onClick={() => startRename(conv)}
-                        title="重命名"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          startRename(conv)
+                        }}
+                        title="重命名会话"
+                        aria-label="重命名会话"
                       />
                       <Popconfirm
                         title="确定删除该会话？"
@@ -245,7 +249,9 @@ export function ConversationSidebar({
                           size="small"
                           danger
                           icon={<DeleteOutlined />}
-                          title="删除"
+                          title="删除会话"
+                          aria-label="删除会话"
+                          onClick={(e) => e.stopPropagation()}
                         />
                       </Popconfirm>
                     </div>

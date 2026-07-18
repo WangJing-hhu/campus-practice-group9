@@ -30,6 +30,8 @@ export interface MessageListProps {
   emptyStatus?: ChatEmptyStatus
   /** 点击示例问题 */
   onSelectQuestion?: (question: string) => void
+  /** 网络错误重试 */
+  onRetry?: () => void
 }
 
 // ===== 常量 =====
@@ -48,6 +50,7 @@ export function MessageList({
   loading,
   emptyStatus = 'normal',
   onSelectQuestion,
+  onRetry,
 }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const isNearBottomRef = useRef(true)
@@ -59,7 +62,7 @@ export function MessageList({
     if (!el) return
     el.scrollTo({
       top: el.scrollHeight,
-      behavior: smooth ? 'smooth' : 'instant',
+      behavior: smooth ? 'smooth' : 'auto',
     })
     setShowScrollButton(false)
   }, [])
@@ -111,6 +114,7 @@ export function MessageList({
         <ChatEmpty
           status={emptyStatus}
           onSelectQuestion={onSelectQuestion}
+          onRetry={onRetry}
         />
       </div>
     )

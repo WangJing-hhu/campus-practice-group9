@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { Typography, Button } from 'antd'
-import { DownOutlined, UpOutlined, FileTextOutlined } from '@ant-design/icons'
+import { DownOutlined, UpOutlined, FileTextOutlined, GlobalOutlined } from '@ant-design/icons'
 import type { ChatSource } from '../../types/chat'
+import { OfficialSourceTag } from '../document/OfficialSourceTag'
+import { OfficialSourceDetail } from '../document/OfficialSourceDetail'
+import '../../styles/official-source.css'
 
 const { Text, Paragraph } = Typography
 
@@ -21,12 +24,6 @@ function formatScore(score: number | undefined | null): string {
   if (isNaN(num)) return '—'
   const pct = num <= 1 ? Math.round(num * 100) : Math.round(num)
   return `${pct}%`
-}
-
-/** 安全截取文本摘要 */
-function safeSummary(content: string | undefined | null, maxLen = 200): string {
-  if (!content) return '—'
-  return content.length > maxLen ? content.slice(0, maxLen) + '…' : content
 }
 
 // ===== 组件 =====
@@ -67,6 +64,13 @@ export function SourceCard({ source, anchorId }: SourceCardProps) {
             {fileName}
           </Text>
         )}
+        {/* 官网来源轻量标记 */}
+        {source.sourceUrl && (
+          <span className="chat-source__official-badge">
+            <GlobalOutlined />
+            官网
+          </span>
+        )}
         <span className="chat-source__score">
           相似度 {formatScore(score)}
         </span>
@@ -74,16 +78,16 @@ export function SourceCard({ source, anchorId }: SourceCardProps) {
 
       {/* 内容摘要 */}
       {hasContent && (
-        <div className="chat-source__body">
-          {expanded ? (
-            <Paragraph className="chat-source__content">
-              {content}
-            </Paragraph>
-          ) : (
-            <Text className="chat-source__content">
-              {safeSummary(content)}
-            </Text>
-          )}
+        <div
+          className={
+            `chat-source__body${
+              expanded ? ' chat-source__body--expanded' : ''
+            }`
+          }
+        >
+          <Paragraph className="chat-source__content">
+            {content}
+          </Paragraph>
 
           {/* 展开/收起按钮：仅当内容超过折叠阈值时显示 */}
           {content && content.length > 200 && (
@@ -106,6 +110,37 @@ export function SourceCard({ source, anchorId }: SourceCardProps) {
           <Text type="secondary" italic>
             暂无摘要内容
           </Text>
+        </div>
+      )}
+
+      {/* 官网原文链接 */}
+      {source.sourceUrl && (
+        <a
+          href={source.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="chat-source__link"
+          onClick={(e) => e.stopPropagation()}
+        >
+          查看官网原文
+        </a>
+      )}
+
+      {/* 官网来源详情（仅当存在官网字段时显示） */}
+      {(source.sourceUrl || source.sourceDomain || source.category || source.sourceUpdatedAt) && (
+        <div className="chat-source__official" onClick={(e) => e.stopPropagation()}>
+          <OfficialSourceTag
+            sourceUrl={source.sourceUrl}
+            sourceDomain={source.sourceDomain}
+            category={source.category}
+            validityStatus={source.validityStatus}
+          />
+          <OfficialSourceDetail
+            sourceDomain={source.sourceDomain}
+            category={source.category}
+            sourceUpdatedAt={source.sourceUpdatedAt}
+            sourceUrl={source.sourceUrl}
+          />
         </div>
       )}
     </div>
