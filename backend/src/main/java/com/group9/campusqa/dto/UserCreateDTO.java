@@ -8,24 +8,24 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class UserCreateDTO {
-    @NotBlank(message = "???????")
-    @Size(min = 2, max = 50, message = "???????2-50?")
+    @NotBlank(message = "用户名不能为空")
+    @Size(min = 2, max = 50, message = "用户名长度应为2-50位")
     private String username;
 
-    @NotBlank(message = "??????")
-    @Size(min = 6, max = 72, message = "??????6-72?")
+    @NotBlank(message = "密码不能为空")
+    @Size(min = 6, max = 72, message = "密码长度应为6-72位")
     private String password;
 
-    @NotBlank(message = "??????")
-    @Email(message = "???????")
+    @NotBlank(message = "邮箱不能为空")
+    @Email(message = "邮箱格式不正确")
     private String email;
 
-    @NotBlank(message = "??????")
-    @Pattern(regexp = "admin|user", message = "?????admin?user")
+    @NotBlank(message = "角色不能为空")
+    @Pattern(regexp = "admin|user", message = "角色只能是admin或user")
     private String role;
 
-    @Min(value = 0, message = "?????0?1")
-    @Max(value = 1, message = "?????0?1")
+    @Min(value = 0, message = "状态只能是0或1")
+    @Max(value = 1, message = "状态只能是0或1")
     private Integer status = 1;
 
     public String getUsername() { return username; }

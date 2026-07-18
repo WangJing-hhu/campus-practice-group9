@@ -5,14 +5,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public class RegisterDTO {
-    @NotBlank(message = "???????")
-    @Size(min = 2, max = 50, message = "???????2-50?")
+    @NotBlank(message = "用户名不能为空")
+    @Size(min = 2, max = 50, message = "用户名长度应为2-50位")
     private String username;
-    @NotBlank(message = "??????")
-    @Size(min = 6, max = 72, message = "??????6-72?")
+    @NotBlank(message = "密码不能为空")
+    @Size(min = 6, max = 72, message = "密码长度应为6-72位")
     private String password;
-    @NotBlank(message = "??????")
-    @Email(message = "???????")
+    @NotBlank(message = "邮箱不能为空")
+    @Email(message = "邮箱格式不正确")
     private String email;
 
     public String getUsername() { return username; }
